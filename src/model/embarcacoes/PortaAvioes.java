@@ -5,7 +5,6 @@ import model.Embarcacao;
 public class PortaAvioes extends Embarcacao {
 
     public PortaAvioes() {
-        this.nome = "Porta Avioes";
-        this.tamanho = 5;
+        super(5, "Porta Avioes");
     }
 }

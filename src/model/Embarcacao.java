@@ -8,6 +8,11 @@ public class Embarcacao {
     private List<Posicao> posicoes;
     private int partesRestantes;
 
+    public Embarcacao(int tamanho, String nome) {
+        this.tamanho = tamanho;
+        this.nome = nome;
+    }
+
     public boolean receberDano(){
         return false;
     }
