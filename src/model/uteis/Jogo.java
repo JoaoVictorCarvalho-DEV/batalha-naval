@@ -1,9 +1,9 @@
-package model;
+package model.uteis;
 
 public class Jogo {
 
-    private Tabuleiro tabuleiroJogador1;
-    private Tabuleiro tabuleiroJogador2;
+    private Jogador jogador1;
+    private Jogador jogador2;
     private int jogadorAtual;
 
     public void iniciarPartida(){

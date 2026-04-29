@@ -1,4 +1,4 @@
-package model;
+package model.uteis;
 
 public enum Resultado {
     AGUA,

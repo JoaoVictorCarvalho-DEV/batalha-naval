@@ -1,4 +1,6 @@
-package model;
+package model.embarcacoes;
+
+import model.uteis.Posicao;
 
 import java.util.List;
 

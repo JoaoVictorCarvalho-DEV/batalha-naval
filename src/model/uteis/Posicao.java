@@ -1,4 +1,6 @@
-package model;
+package model.uteis;
+
+import model.embarcacoes.Embarcacao;
 
 public class Posicao {
     private int linha;
@@ -13,5 +15,13 @@ public class Posicao {
 
     public void marcarAtaque() {
         System.out.println("Marcar ataque...");
+    }
+
+    public int getLinha() {
+        return linha;
+    }
+
+    public int getColuna() {
+        return coluna;
     }
 }
