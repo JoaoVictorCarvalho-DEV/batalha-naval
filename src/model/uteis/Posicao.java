@@ -8,6 +8,12 @@ public class Posicao {
     private Embarcacao ocupadaPor;
     private boolean foiAtacada;
 
+    public Posicao(int linha, int coluna) {
+        this.linha = linha;
+        this.coluna = coluna;
+        this.foiAtacada = false;
+    }
+
     public boolean estaDisponivel() {
         System.out.println("Posicao nao disponivel.");
         return false;

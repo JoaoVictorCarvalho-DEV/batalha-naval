@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class Jogador {
     private String nome;
-    private Tabuleiro tabuleiro;
+    public Tabuleiro tabuleiro;
     private int tiros;
     private int tirosAcertados;
     private int tirosConsecutivos;
