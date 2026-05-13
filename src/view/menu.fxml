@@ -25,7 +25,7 @@
             <Glow />
          </effect>
       </Button>
-      <Button defaultButton="true" layoutX="43.0" layoutY="306.0" mnemonicParsing="false" onMouseClicked="#sair" prefHeight="25.0" prefWidth="62.0" text="Sair">
+      <Button defaultButton="true" layoutX="43.0" layoutY="258.0" mnemonicParsing="false" onMouseClicked="#viewPontuacao" text="Pontuações">
          <font>
             <Font size="16.0" />
          </font>
@@ -36,7 +36,7 @@
             <Glow />
          </effect>
       </Button>
-      <Button defaultButton="true" layoutX="43.0" layoutY="258.0" mnemonicParsing="false" text="Pontuações">
+      <Button defaultButton="true" layoutX="43.0" layoutY="306.0" mnemonicParsing="false" onMouseClicked="#sair" prefHeight="30.0" prefWidth="62.0" text="Sair">
          <font>
             <Font size="16.0" />
          </font>
