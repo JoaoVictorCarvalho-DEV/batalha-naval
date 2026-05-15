@@ -4,8 +4,10 @@ import app.Main;
 
 public class MenuController {
 
-    public void view_jogo() {
-        Main.changeScreen("setup.fxml");
+
+
+    public void viewJogo() {
+        Main.changeScreen("pre-game.fxml");
     }
 
     public void viewPontuacao(){

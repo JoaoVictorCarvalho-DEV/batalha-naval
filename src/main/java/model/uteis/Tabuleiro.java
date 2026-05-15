@@ -2,7 +2,6 @@ package model.uteis;
 
 import model.embarcacoes.Embarcacao;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class Tabuleiro {

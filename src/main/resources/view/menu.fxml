@@ -14,7 +14,7 @@
             <Font name="Lucida Console" size="36.0" />
          </font>
       </Text>
-      <Button defaultButton="true" layoutX="43.0" layoutY="207.0" mnemonicParsing="false" text="Jogar">
+      <Button defaultButton="true" layoutX="43.0" layoutY="207.0" mnemonicParsing="false" onAction="#viewJogo" text="Jogar">
          <font>
             <Font size="16.0" />
          </font>
