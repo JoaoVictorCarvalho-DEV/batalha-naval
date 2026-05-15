@@ -25,13 +25,21 @@ public class Tabuleiro {
     }
 
     public boolean posicionarEmbarcacao(Embarcacao embarcacao, int linha, int coluna, Orientacao orientacao){
-        System.out.println("Posicionar embarcacao...");
+        System.out.println("Posicionar embarcacao " + embarcacao.getNome());
+        matrizPosicao[linha][coluna].ocupar(embarcacao);
+
+        for(int i = 0; i < embarcacao.getTamanho(); i++){
+            matrizPosicao[linha][coluna].ocupar(embarcacao);
+
+
+        }
         return true;
     }
 
     public Resultado receberAtaque(int linha, int coluna){
-        System.out.println("Recebendo ataque na linha " + linha + " e coluna " + coluna);
-        return Resultado.ACERTOU;
+        Posicao posicao = matrizPosicao[linha][coluna];
+
+        return posicao.atacar();
     }
 
     public void exibirTabuleiro(boolean ocultarNavios){
@@ -51,5 +59,9 @@ public class Tabuleiro {
 
     public Posicao getPosicao(Posicao posicao){
         return matrizPosicao[posicao.getLinha()][posicao.getColuna()];
+    }
+
+    public int getTamanho(){
+        return this.tamanho;
     }
 }

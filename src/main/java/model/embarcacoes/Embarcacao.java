@@ -13,10 +13,12 @@ public class Embarcacao {
     public Embarcacao(int tamanho, String nome) {
         this.tamanho = tamanho;
         this.nome = nome;
+        this.partesRestantes = tamanho;
     }
 
     public boolean receberDano(){
-        return false;
+        partesRestantes = partesRestantes - 1;
+        return true;
     }
 
     public boolean estaDestruido(){
@@ -28,4 +30,7 @@ public class Embarcacao {
     }
 
 
+    public String getNome() {
+        return nome;
+    }
 }

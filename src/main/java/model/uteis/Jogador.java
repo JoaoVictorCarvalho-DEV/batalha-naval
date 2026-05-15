@@ -20,9 +20,6 @@ public class Jogador {
     }
 
     public void atirar(Tabuleiro tabuleiro, Posicao posicao){
-        /*switch (tabuleiro.getPosicao(posicao).getTipo()){
-
-        }*/
     }
 
 
@@ -56,5 +53,9 @@ public class Jogador {
 
     public int getTirosConsecutivos() {
         return tirosConsecutivos;
+    }
+
+    public Tabuleiro getTabuleiro() {
+        return tabuleiro;
     }
 }

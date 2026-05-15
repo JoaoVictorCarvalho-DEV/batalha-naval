@@ -4,19 +4,33 @@ import app.Main;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
+import model.uteis.Jogo;
+import model.uteis.Resultado;
+import model.uteis.Tabuleiro;
 
 public class GameController {
 
-    public GridPane enemyBoard;
-
-
     @FXML
     private GridPane playerBoard;
+    @FXML
+    public GridPane enemyBoard;
+
+    private Jogo jogo;
 
     @FXML
     public void initialize() {
-        buildBoard(playerBoard, false);
-        buildBoard(enemyBoard, true);
+        jogo = new Jogo("Jogador 1", "Jogador 2");
+
+        System.out.println("Iniciar jogador:" + jogo.getJogadorAtual().getNome());
+        buildBoard(playerBoard, jogo.getJogadorAtual().getTabuleiro());
+        jogo.alternarJogador();
+
+        System.out.println("Iniciar jogador:" + jogo.getJogadorAtual().getNome());
+        buildBoard(enemyBoard, jogo.getJogadorAtual().getTabuleiro());
+        jogo.alternarJogador();
+
+
+
     }
 
     public void viewMenu(){
@@ -24,8 +38,8 @@ public class GameController {
     }
 
 
-    private void buildBoard(GridPane board, boolean isEnemy) {
-        int size = 10; // tabuleiro 10x10
+    private void buildBoard(GridPane grid, Tabuleiro tabuleiro) {
+        int size = tabuleiro.getTamanho();
 
         for (int row = 0; row < size; row++) {
             for (int col = 0; col < size; col++) {
@@ -36,18 +50,22 @@ public class GameController {
                 int r = row;
                 int c = col;
 
-                if (isEnemy) {
-                    cell.setOnAction(e -> shoot(r, c, cell));
-                }
+                cell.setOnAction(e -> {
+                    Resultado resultado = tabuleiro.receberAtaque(r, c);
+                    atualizarCelula(cell, resultado);
+                });
 
-                board.add(cell, col, row);
+               grid.add(cell, col, row);
             }
         }
     }
 
 
-    private void shoot(int row, int col, Button cell) {
-        cell.setStyle("-fx-background-color: red;");
-        cell.setDisable(true);
+    private void atualizarCelula(Button cell, Resultado r){
+        if(r == Resultado.ACERTOU){
+            cell.setStyle("-fx-background-color: red;");
+        } else {
+            cell.setStyle("-fx-background-color: gray;");
+        }
     }
 }

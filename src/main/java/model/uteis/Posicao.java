@@ -3,9 +3,11 @@ package model.uteis;
 import model.embarcacoes.Embarcacao;
 
 public class Posicao {
-    private int linha;
-    private int coluna;
-    private Embarcacao ocupadaPor;
+
+    private final int linha;
+    private final int coluna;
+
+    private Embarcacao embarcacao;
     private boolean foiAtacada;
 
     public Posicao(int linha, int coluna) {
@@ -14,14 +16,39 @@ public class Posicao {
         this.foiAtacada = false;
     }
 
-    public boolean estaDisponivel() {
-        System.out.println("Posicao nao disponivel.");
-        return false;
+
+    public boolean temEmbarcacao() {
+        return embarcacao != null;
     }
 
-    public void marcarAtaque() {
-        System.out.println("Marcar ataque...");
+    public boolean jaFoiAtacada() {
+        return foiAtacada;
     }
+
+    public boolean estaDisponivel() {
+        return embarcacao == null;
+    }
+
+    public void ocupar(Embarcacao embarcacao) {
+        this.embarcacao = embarcacao;
+    }
+
+
+    public Resultado atacar() {
+        if (foiAtacada) {
+            return Resultado.JA_ATACADO;
+        }
+
+        foiAtacada = true;
+
+        if (temEmbarcacao()) {
+            embarcacao.receberDano();
+            return Resultado.ACERTOU;
+        }
+
+        return Resultado.ERROU;
+    }
+
 
     public int getLinha() {
         return linha;
@@ -29,5 +56,9 @@ public class Posicao {
 
     public int getColuna() {
         return coluna;
+    }
+
+    public Embarcacao getEmbarcacao() {
+        return embarcacao;
     }
 }

@@ -1,0 +1,16 @@
+model\uteis\Orientacao.class
+controller\PreGameController.class
+model\uteis\Jogo.class
+model\embarcacoes\Cruzador.class
+app\Main.class
+controller\PontuacaoController.class
+controller\game\GameController.class
+model\uteis\Resultado.class
+model\embarcacoes\Encourassado.class
+model\embarcacoes\PortaAvioes.class
+model\uteis\Posicao.class
+model\uteis\Tabuleiro.class
+controller\MenuController.class
+model\uteis\Jogador.class
+model\embarcacoes\Embarcacao.class
+model\embarcacoes\Submarino.class

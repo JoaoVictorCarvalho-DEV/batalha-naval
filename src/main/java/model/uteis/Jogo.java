@@ -6,36 +6,37 @@ public class Jogo {
     private Jogador jogador2;
     private Jogador jogadorAtual;
 
-    public Jogo() {
-        this.jogador1 = new Jogador("Jogador 1", new Tabuleiro(10));
-        this.jogador2 = new Jogador("Jogador 2", new Tabuleiro(10));
+    public Jogo(String nome1, String nome2) {
+        this.jogador1 = new Jogador(nome1, new Tabuleiro(10));
+        this.jogador2 = new Jogador(nome2, new Tabuleiro(10));
+        this.jogadorAtual = jogador1;
     }
 
-    public void iniciarPartida(){
-        System.out.println("Iniciando a partida...");
-        this.jogadorAtual = this.jogador1;
-
-        //SETAR POSICOES DO JOGADOR 1
-        System.out.println("Defina a posição das suas embarcacoes");
-        jogadorAtual.tabuleiro.exibirTabuleiro(false);
-
-        this.alternarJogador();
-        //SETAR POSICOES DO JOGADOR 2
-
-
-        //AGUARDAR JOGADAS E VERIFICAR ESTADO DO JOGO ATÉ ACABAR
+    public Jogador getJogadorAtual() {
+        return jogadorAtual;
     }
 
-    public Resultado realizarJogada() {
-        return Resultado.AGUA;
+    public Jogador getOponente() {
+        return jogadorAtual == jogador1 ? jogador2 : jogador1;
     }
 
-    public boolean verificarFimDeJogo(){
-        return false;
+    public Resultado atacar(int linha, int coluna) {
+        Resultado resultado = getOponente().getTabuleiro().receberAtaque(linha, coluna);
+
+        if (resultado != Resultado.JA_ATACADO) {
+            alternarJogador();
+        }
+
+        return resultado;
     }
 
-    public void alternarJogador(){
-        System.out.println("Alternando jogador...");
+    public boolean acabou() {
+        return jogador1.getTabuleiro().todasEmbarcacoesDestruidas()
+                || jogador2.getTabuleiro().todasEmbarcacoesDestruidas();
     }
 
+    public void alternarJogador() {
+        System.out.println("Trocar de jogador " + jogadorAtual.getNome() + " para " + getOponente().getNome());
+        jogadorAtual = (jogadorAtual == jogador1) ? jogador2 : jogador1;
+    }
 }
