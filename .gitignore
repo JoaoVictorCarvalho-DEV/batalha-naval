@@ -12,6 +12,14 @@ out/
 .settings
 .springBeans
 .sts4-cache
+
+## Intelij ##
+.idea
+.idea/*
+
+### vscode ###
+.vscode/
+
 bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
@@ -28,3 +36,18 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Maven Artifacts ###
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.next
+pom.xml.versionsBackup
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/.maven-wrapper.jar
+
+### Log files ###
+*.log
