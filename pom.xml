@@ -10,7 +10,7 @@
     <version>1.0</version>
 
     <properties>
-        <maven.compiler.release>22</maven.compiler.release>
+        <maven.compiler.release>26</maven.compiler.release>
         <javafx.version>22.0.1</javafx.version>
     </properties>
 
