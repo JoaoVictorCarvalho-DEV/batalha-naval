@@ -33,7 +33,7 @@ public class GameController {
         jogo.alternarJogador();
 
         jogo.getJogadorAtual().tabuleiro.posicionarEmbarcacao(new Encouracado(), 1,4, Orientacao.HORIZONTAL);
-        jogo.getJogadorAtual().tabuleiro.posicionarEmbarcacao(new PortaAvioes(), 6,5, Orientacao.HORIZONTAL_INVERSA);
+        jogo.getJogadorAtual().tabuleiro.posicionarEmbarcacao(new PortaAvioes(), 1,5, Orientacao.HORIZONTAL_INVERSA);
 
     }
 

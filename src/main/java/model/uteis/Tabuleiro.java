@@ -29,7 +29,7 @@ public class Tabuleiro {
 
         for(int i = 0; i < embarcacao.getTamanho(); i++){
 
-            if(!testarPosicao(embarcacao.getTamanho(), linha, coluna, orientacao)){
+            if(!testarPosicao(embarcacao, linha, coluna, orientacao)){
                 return false;
             }
 
@@ -55,29 +55,34 @@ public class Tabuleiro {
         return true;
     }
 
-    private boolean testarPosicao(int tamanhoEmbarcao, int linha, int coluna, Orientacao orientacao){
+    private boolean testarPosicao(Embarcacao embarcacao, int linha, int coluna, Orientacao orientacao){
+
+        if(matrizPosicao[linha][coluna].temEmbarcacao() && matrizPosicao[linha][coluna].getEmbarcacao() != embarcacao){
+            System.out.printf("A posicao [%d][%d] já está ocupada.\n", linha, coluna );
+            return false;
+        }
         if(orientacao == Orientacao.VERTICAL){
-            if((linha + 1) - tamanhoEmbarcao < 0){
-                System.out.println("Tamanho da embarcacao excede o tamanho do tabuleiro em:  " + ( (linha + 1) - tamanhoEmbarcao));
+            if((linha + 1) - embarcacao.getTamanho() < 0){
+                System.out.println("Tamanho da embarcacao excede o tamanho do tabuleiro em:  " + ( (linha + 1) - embarcacao.getTamanho()));
                 return false ;
             }
         }
         if(orientacao == Orientacao.HORIZONTAL){
-            if((coluna + 1) - tamanhoEmbarcao > this.tamanho){
-                System.out.println("Tamanho da embarcacao excede o tamanho do tabuleiro em:  " + ( (coluna + 1) + tamanhoEmbarcao));
+            if((coluna + 1) - embarcacao.getTamanho() > this.tamanho){
+                System.out.println("Tamanho da embarcacao excede o tamanho do tabuleiro em:  " + ( (coluna + 1) + embarcacao.getTamanho()));
                 return false ;
             }
         }
         if(orientacao == Orientacao.VERTICAL_INVERSA){
-            if((linha + 1) + tamanhoEmbarcao > this.tamanho){
-                System.out.println("Tamanho da embarcacao excede o tamanho do tabuleiro em:  " + ( (linha + 1) + tamanhoEmbarcao));
+            if((linha + 1) + embarcacao.getTamanho() > this.tamanho){
+                System.out.println("Tamanho da embarcacao excede o tamanho do tabuleiro em:  " + ( (linha + 1) + embarcacao.getTamanho()));
                 return false ;
             }
         }
 
         if(orientacao == Orientacao.HORIZONTAL_INVERSA){
-            if((coluna + 1) - tamanhoEmbarcao < 0){
-                System.out.println("Tamanho da embarcacao excede o tamanho do tabuleiro em:  " + ( (coluna + 1) - tamanhoEmbarcao));
+            if((coluna + 1) - embarcacao.getTamanho() < 0){
+                System.out.println("Tamanho da embarcacao excede o tamanho do tabuleiro em:  " + ( (coluna + 1) - embarcacao.getTamanho()));
                 return false ;
             }
         }
