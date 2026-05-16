@@ -4,7 +4,10 @@ import app.Main;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
+import model.embarcacoes.Encouracado;
+import model.embarcacoes.PortaAvioes;
 import model.uteis.Jogo;
+import model.uteis.Orientacao;
 import model.uteis.Resultado;
 import model.uteis.Tabuleiro;
 
@@ -29,7 +32,8 @@ public class GameController {
         buildBoard(enemyBoard, jogo.getJogadorAtual().getTabuleiro());
         jogo.alternarJogador();
 
-
+        jogo.getJogadorAtual().tabuleiro.posicionarEmbarcacao(new Encouracado(), 1,4, Orientacao.HORIZONTAL);
+        jogo.getJogadorAtual().tabuleiro.posicionarEmbarcacao(new PortaAvioes(), 6,5, Orientacao.HORIZONTAL_INVERSA);
 
     }
 
