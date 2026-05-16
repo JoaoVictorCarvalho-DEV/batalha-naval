@@ -3,6 +3,7 @@ package model.uteis;
 import model.embarcacoes.Embarcacao;
 
 import java.util.List;
+import java.util.ArrayList;
 
 public class Tabuleiro {
 
@@ -12,6 +13,7 @@ public class Tabuleiro {
 
     public Tabuleiro(int tamanho) {
         this.tamanho = tamanho;
+        this.embarcacoes = new ArrayList<>(); // Inicializa a lista
         this.matrizPosicao = new Posicao[tamanho][tamanho];
         preencherMatriz();
     }
@@ -25,27 +27,35 @@ public class Tabuleiro {
     }
 
     public boolean posicionarEmbarcacao(Embarcacao embarcacao, int linha, int coluna, Orientacao orientacao){
-        System.out.println("Posicionar embarcacao " + embarcacao.getNome());
-        matrizPosicao[linha][coluna].ocupar(embarcacao);
-
-        for(int i = 0; i < embarcacao.getTamanho(); i++){
-            matrizPosicao[linha][coluna].ocupar(embarcacao);
-
-
+        // Verifica se as células são capazes de serem ocupadas
+        for (int i = 0; i < embarcacao.getTamanho(); i++) {
+            int c = coluna + 1;
+            if (c >= tamanho) return false; // Saiu do tabuleiro
+            if (!matrizPosicao[linha][c].estaDisponivel()) return false; // Célula ocupada
         }
+
+        // Ocupar as células
+        for(int i = 0; i < embarcacao.getTamanho(); i++){
+            matrizPosicao[linha][coluna + i].ocupar(embarcacao);
+        }
+        embarcacoes.add(embarcacao);
         return true;
     }
 
     public Resultado receberAtaque(int linha, int coluna){
         Posicao posicao = matrizPosicao[linha][coluna];
+        Resultado resultado = posicao.atacar();
 
-        return posicao.atacar();
+        // Checar se afundou depois do ataque
+        if (resultado == Resultado.ACERTOU && posicao.getEmbarcacao().estaDestruido()) {
+            return Resultado.AFUNDOU;
+        }
+        return resultado;
     }
 
     public void exibirTabuleiro(boolean ocultarNavios){
-        System.out.println(ocultarNavios ? "Exibir tabuleiro com navios" : "Exibir tabuleiro sem navios");
-        for(Posicao[] posicao :  matrizPosicao){
-            for(Posicao pos : posicao){
+        for(Posicao[] linha :  matrizPosicao){
+            for(Posicao pos : linha){
                 System.out.print("[" + pos.getLinha() + " " + pos.getColuna() + "]");
             };
             System.out.println("\n");
@@ -53,8 +63,8 @@ public class Tabuleiro {
     }
 
     public boolean todasEmbarcacoesDestruidas(){
-        System.out.println("Todas as embarcacoe nao destruidas");
-        return false;
+        if (embarcacoes.isEmpty()) return false;
+        return embarcacoes.stream().allMatch(Embarcacao::estaDestruido);
     }
 
     public Posicao getPosicao(Posicao posicao){

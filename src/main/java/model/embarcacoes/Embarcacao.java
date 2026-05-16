@@ -17,12 +17,12 @@ public class Embarcacao {
     }
 
     public boolean receberDano(){
-        partesRestantes = partesRestantes - 1;
-        return true;
+        partesRestantes--;
+        return estaDestruido(); // Agora não retorna sempre True
     }
 
     public boolean estaDestruido(){
-        return false;
+        return partesRestantes == 0; // Agora não retorna sempre false
     }
 
     public int getTamanho(){

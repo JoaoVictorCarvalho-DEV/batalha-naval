@@ -2,9 +2,15 @@ package controller.game;
 
 import app.Main;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
+import model.embarcacoes.Cruzador;
+import model.embarcacoes.Encouracado;
+import model.embarcacoes.PortaAvioes;
+import model.embarcacoes.Submarino;
 import model.uteis.Jogo;
+import model.uteis.Orientacao;
 import model.uteis.Resultado;
 import model.uteis.Tabuleiro;
 
@@ -21,25 +27,26 @@ public class GameController {
     public void initialize() {
         jogo = new Jogo("Jogador 1", "Jogador 2");
 
-        System.out.println("Iniciar jogador:" + jogo.getJogadorAtual().getNome());
-        buildBoard(playerBoard, jogo.getJogadorAtual().getTabuleiro());
-        jogo.alternarJogador();
+        colocarNavios(jogo.getJogadorAtual().getTabuleiro());
+        colocarNavios(jogo.getOponente().getTabuleiro());
 
-        System.out.println("Iniciar jogador:" + jogo.getJogadorAtual().getNome());
-        buildBoard(enemyBoard, jogo.getJogadorAtual().getTabuleiro());
-        jogo.alternarJogador();
+        // tabuleiro do jogador: só visual, sem clique
+        buildBoard(playerBoard, false);
 
-
-
+        // tabuleiro inimigo: pode clicar
+        buildBoard(enemyBoard, true);
     }
 
-    public void viewMenu(){
-        Main.changeScreen("menu.fxml");
+    private void colocarNavios(Tabuleiro tabuleiro) {
+        tabuleiro.posicionarEmbarcacao(new PortaAvioes(), 0, 0, Orientacao.HORIZONTAL);
+        tabuleiro.posicionarEmbarcacao(new Encouracado(), 2, 0, Orientacao.HORIZONTAL);
+        tabuleiro.posicionarEmbarcacao(new Cruzador(), 4, 0, Orientacao.HORIZONTAL);
+        tabuleiro.posicionarEmbarcacao(new Submarino(), 6, 0, Orientacao.HORIZONTAL);
     }
 
 
-    private void buildBoard(GridPane grid, Tabuleiro tabuleiro) {
-        int size = tabuleiro.getTamanho();
+    private void buildBoard(GridPane grid, boolean clicavel) {
+        int size = jogo.getJogadorAtual().getTabuleiro().getTamanho();
 
         for (int row = 0; row < size; row++) {
             for (int col = 0; col < size; col++) {
@@ -47,25 +54,42 @@ public class GameController {
                 Button cell = new Button();
                 cell.setPrefSize(35, 35);
 
-                int r = row;
-                int c = col;
+                if (clicavel) {
+                    int r = row, c = col;
+                    cell.setOnAction(e -> {
+                        Resultado resultado = jogo.atacar(r, c);
+                        atualizarCelula(cell, resultado);
 
-                cell.setOnAction(e -> {
-                    Resultado resultado = tabuleiro.receberAtaque(r, c);
-                    atualizarCelula(cell, resultado);
-                });
-
-               grid.add(cell, col, row);
+                        if (jogo.acabou()) {
+                            mostrarVencedor();
+                        }
+                    });
+                }
+                grid.add(cell, col, row);
             }
         }
     }
 
-
-    private void atualizarCelula(Button cell, Resultado r){
-        if(r == Resultado.ACERTOU){
-            cell.setStyle("-fx-background-color: red;");
-        } else {
-            cell.setStyle("-fx-background-color: gray;");
+    private void atualizarCelula(Button cell, Resultado r) {
+        switch (r) {
+            case ACERTOU -> cell.setStyle("-fx-background-color: orange;");
+            case AFUNDOU -> cell.setStyle("-fx-background-color: red;");
+            case ERROU -> cell.setStyle("-fx-background-color:  blue;");
+            case JA_ATACADO -> {
+            }
         }
+    }
+
+    private void mostrarVencedor() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Fim de jogo!");
+        alert.setHeaderText(null);
+        alert.setContentText("Vencedor: " + jogo.getJogadorAtual().getNome());
+        alert.showAndWait();
+        Main.changeScreen("menu.fxml");
+    }
+
+    public void viewMenu() {
+        Main.changeScreen("menu.fxml");
     }
 }
