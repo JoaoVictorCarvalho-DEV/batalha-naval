@@ -25,10 +25,6 @@ public class Posicao {
         return foiAtacada;
     }
 
-    public boolean estaDisponivel() {
-        return embarcacao == null;
-    }
-
     public void ocupar(Embarcacao embarcacao) {
         this.embarcacao = embarcacao;
     }
@@ -59,6 +55,6 @@ public class Posicao {
     }
 
     public Embarcacao getEmbarcacao() {
-        return embarcacao;
+        return embarcacao ;
     }
 }

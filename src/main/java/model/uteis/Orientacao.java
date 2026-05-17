@@ -1,25 +1,27 @@
 package model.uteis;
 
 public enum Orientacao {
-    HORIZONTAL,
     VERTICAL,
+    HORIZONTAL,
+    VERTICAL_INVERSA,
     HORIZONTAL_INVERSA,
-    VERTICAL_INVERSA
 
     /*
+    #
+    *           #
+    *           #
+    *           #       VERTICAL
+    *
     *           ####      HORIZONTAL
     *
-    *           #         VERTICAL
+    *
+    *           #       VERTICAL_INVERSA
     *           #
     *           #
     *           #
     *
     *        ####        HORIZONTAL_INVERSA
     *
-    *           #
-    *           #
-    *           #
-    *           #        VERTICAL_INVERSA
     * */
 
 
