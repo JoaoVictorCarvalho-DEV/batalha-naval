@@ -10,6 +10,7 @@ public class Tabuleiro {
     private List<Embarcacao> embarcacoes;
     private Posicao[][] matrizPosicao;
 
+    // Constructor
     public Tabuleiro(int tamanho) {
         this.tamanho = tamanho;
         this.matrizPosicao = new Posicao[tamanho][tamanho];
