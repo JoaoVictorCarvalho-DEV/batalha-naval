@@ -69,15 +69,56 @@ public class GameController {
                 int c = col;
 
                 cell.setOnAction(e -> {
-                    Resultado resultado = tabuleiro.receberAtaque(r, c);
-                    atualizarCelula(cell, resultado);
+                    // Fase de posicionamento: Ações posicionam embaração no tabuleiro
+                    if (faseDePosicionamento) {
+
+                        // Ações do usuário no próprio tabuleiro
+                        if (isPlayerGrid && indiceNavioAtual < sequenciaDeNavios.length) {
+                            Embarcacao navioParaPosicionar = sequenciaDeNavios[indiceNavioAtual];
+
+                            boolean sucesso = tabuleiro.posicionarEmbarcacao(navioParaPosicionar, r, c, orientacaoAtual);
+
+                            if (sucesso) {
+                                // 1. Renderiza visualmente no grid do Jogador 1
+                                renderizarNavioNoGrid(grid, navioParaPosicionar, r, c, orientacaoAtual);
+
+                                // =======================================================================
+                                // LOGICA DE TESTE: Espelha o navio idêntico no Tabuleiro do Jogador 2
+                                // =======================================================================
+                                jogo.alternarJogador(); // Vai para o Jogador 2
+                                Tabuleiro tabJogador2 = jogo.getJogadorAtual().getTabuleiro();
+
+                                // Instancia um novo navio do mesmo tipo para evitar referências duplicadas na memória
+                                Embarcacao navioEspelho = clonarNavioParaTeste(navioParaPosicionar);
+                                boolean sucessoEspelho = tabJogador2.posicionarEmbarcacao(navioEspelho, r, c, orientacaoAtual);
+
+                                System.out.println("[TESTE] Espelhando " + navioEspelho.getNome() + " no Player 2: " + (sucessoEspelho ? "Sucesso" : "Falha"));
+
+                                jogo.alternarJogador(); // Retorna o contexto ao Jogador 1
+                                // =======================================================================
+                                indiceNavioAtual++; // Próximo navio da lista
+
+                                if (indiceNavioAtual < sequenciaDeNavios.length) {
+                                    System.out.println("Próximo navio: " + sequenciaDeNavios[indiceNavioAtual].getNome());
+                                } else {
+                                    System.out.println("Todos os navios posicionados! Fase de combate iniciada.");
+                                    faseDePosicionamento = false;
+                                }
+                            }
+                        }
+                    } else {
+                        // Fase de combate: ações atacam o tabuleiro adversário
+                        if (!isPlayerGrid){
+                            Resultado resultado = tabuleiro.receberAtaque(r, c);
+                            atualizarCelula(cell, resultado);
+                        }
+                    }
                 });
 
                grid.add(cell, col, row);
             }
         }
     }
-
     private void atualizarCelula(Button cell, Resultado r){
         if(r == Resultado.ACERTOU){
             cell.setStyle("-fx-background-color: red;");
