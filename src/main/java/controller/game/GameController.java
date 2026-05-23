@@ -34,7 +34,6 @@ public class GameController {
 
         jogo.getJogadorAtual().tabuleiro.posicionarEmbarcacao(new Encouracado(), 1,4, Orientacao.HORIZONTAL);
         jogo.getJogadorAtual().tabuleiro.posicionarEmbarcacao(new PortaAvioes(), 1,5, Orientacao.HORIZONTAL_INVERSA);
-
     }
 
     public void viewMenu(){
@@ -63,7 +62,6 @@ public class GameController {
             }
         }
     }
-
 
     private void atualizarCelula(Button cell, Resultado r){
         if(r == Resultado.ACERTOU){
