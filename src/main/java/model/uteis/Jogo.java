@@ -5,10 +5,11 @@ public class Jogo {
     private Jogador jogador1;
     private Jogador jogador2;
     private Jogador jogadorAtual;
+    private int tamanho = 10;
 
     public Jogo(String nome1, String nome2) {
-        this.jogador1 = new Jogador(nome1, new Tabuleiro(10));
-        this.jogador2 = new Jogador(nome2, new Tabuleiro(10));
+        this.jogador1 = new Jogador(nome1, new Tabuleiro(tamanho));
+        this.jogador2 = new Jogador(nome2, new Tabuleiro(tamanho));
         this.jogadorAtual = jogador1;
     }
 
