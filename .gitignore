@@ -33,6 +33,8 @@ bin/
 
 ### VS Code ###
 .vscode/
+target/
+target/*
 
 ### Mac OS ###
 .DS_Store

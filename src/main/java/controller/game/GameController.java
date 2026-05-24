@@ -1,14 +1,20 @@
 package controller.game;
 
+import java.time.LocalDateTime;
+
 import app.Main;
+import database.Database;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 import model.embarcacoes.*;
 import model.uteis.Jogo;
 import model.uteis.Orientacao;
+import model.uteis.Pontuacao;
 import model.uteis.Resultado;
 import model.uteis.Tabuleiro;
+import repository.PontuacaoRepository;
 
 public class GameController {
 
@@ -24,10 +30,13 @@ public class GameController {
     private int indiceNavioAtual = 0;
     private Embarcacao[] sequenciaDeNavios;
     private Orientacao orientacaoAtual = Orientacao.HORIZONTAL; // Horientação padrão
+    private PontuacaoRepository pontuacaoRepository = new PontuacaoRepository(Database.getInstance().getConnection());
+    private long tempoInicio;
 
     @FXML
     public void initialize() {
         jogo = new Jogo("Jogador 1", "Jogador 2");
+        tempoInicio = System.currentTimeMillis();
 
         sequenciaDeNavios = new Embarcacao[]{
                 new Cruzador(),
@@ -48,6 +57,8 @@ public class GameController {
         buildBoard(enemyBoard, jogo.getJogadorAtual().getTabuleiro(), false);
 
         jogo.alternarJogador();
+
+        //finalizarJogo(); Tá funcionando
 
     }
 
@@ -160,5 +171,38 @@ public class GameController {
         if (navio instanceof Encouracado) return new Encouracado();
         if (navio instanceof PortaAvioes) return new PortaAvioes();
         return new Submarino();
+    }
+
+    private void finalizarJogo() {
+        // Calcula a duração em segundos
+        long tempoFim = System.currentTimeMillis();
+        long duracaoSegundos = (tempoFim - tempoInicio) / 1000;
+        
+        // Cria o objeto Pontuacao
+        Pontuacao pontuacao = new Pontuacao(
+            jogo.getJogadorAtual().getNome(),
+            jogo.getOponente().getNome(),
+            jogo.getJogadorAtual().getNome(),
+            (jogo.getJogadorAtual().getTiros() + jogo.getOponente().getTiros()),
+            duracaoSegundos,
+            LocalDateTime.now()
+        );
+        
+        // Salva no banco de dados
+        boolean salvou = pontuacaoRepository.salvarPontuacao(pontuacao);
+        
+        if (salvou) {
+            mostrarMensagem("Pontuação salva com sucesso!", Alert.AlertType.INFORMATION);
+        } else {
+            mostrarMensagem("Erro ao salvar pontuação!", Alert.AlertType.ERROR);
+        }
+    }
+
+    private void mostrarMensagem(String mensagem, Alert.AlertType tipo) {
+        Alert alert = new Alert(tipo);
+        alert.setTitle("Informação");
+        alert.setHeaderText(null);
+        alert.setContentText(mensagem);
+        alert.showAndWait();
     }
 }
