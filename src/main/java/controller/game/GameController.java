@@ -5,10 +5,10 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 import model.embarcacoes.*;
-import model.uteis.Jogo;
-import model.uteis.Orientacao;
-import model.uteis.Resultado;
-import model.uteis.Tabuleiro;
+import model.uteis.*;
+import javafx.scene.control.Label;
+import java.util.Random;
+import javafx.scene.Node;
 
 public class GameController {
 
@@ -16,8 +16,11 @@ public class GameController {
     private GridPane playerBoard;
     @FXML
     public GridPane enemyBoard;
+    @FXML
+    private Label labelInstrucoes;
 
     private Jogo jogo;
+    private final Random random = new Random();
 
     // Variáveis para rastrear posicionamento;
     private boolean faseDePosicionamento = true;
@@ -29,6 +32,7 @@ public class GameController {
     public void initialize() {
         jogo = new Jogo("Jogador 1", "Jogador 2");
 
+        // Sequência de posicionamento
         sequenciaDeNavios = new Embarcacao[]{
                 new Cruzador(),
                 new Encouracado(),
@@ -36,19 +40,53 @@ public class GameController {
                 new Submarino()
         };
 
+        // Iniciando tabuleiros e jogadores
+        System.out.println("Iniciando jogador:" + jogo.getJogadorAtual().getNome());
+        buildBoard(playerBoard, jogo.getJogadorAtual().getTabuleiro(), true);
+        jogo.alternarJogador();
+        System.out.println("Iniciando jogador:" + jogo.getJogadorAtual().getNome());
+        buildBoard(enemyBoard, jogo.getJogadorAtual().getTabuleiro(), false);
+        jogo.alternarJogador();
+
+        // Fase de posicionamento
         System.out.println("Fase de posicionamento! Monte sua frota clicando no tabuleiro.");
         System.out.println("Posicione agora: " + sequenciaDeNavios[indiceNavioAtual].getNome());
+        atualizarLabelInstrucoes();
 
-        System.out.println("Iniciar jogador:" + jogo.getJogadorAtual().getNome());
-        buildBoard(playerBoard, jogo.getJogadorAtual().getTabuleiro(), true);
+        // Captura a letra "R" para rotacionar a embarcação
+        playerBoard.setOnKeyPressed(event -> {
+            if (faseDePosicionamento) {
+                if (event.getCode() == javafx.scene.input.KeyCode.R) {
 
-        jogo.alternarJogador();
+                    Orientacao novaOrientacao = this.orientacaoAtual.rotacionar();
+                    setOrientacaoAtual(novaOrientacao);
+                    System.out.println("Nova orientação: " + this.orientacaoAtual);
 
-        System.out.println("Iniciar jogador:" + jogo.getJogadorAtual().getNome());
-        buildBoard(enemyBoard, jogo.getJogadorAtual().getTabuleiro(), false);
+                    atualizarLabelInstrucoes();
+                }
+            } else {
 
-        jogo.alternarJogador();
 
+            }
+        });
+
+        playerBoard.setFocusTraversable(true);
+        playerBoard.requestFocus();
+
+
+    }
+
+    // Atualiza UI para mostrar orietação atual do usuário
+    private void atualizarLabelInstrucoes() {
+        if (faseDePosicionamento && indiceNavioAtual < sequenciaDeNavios.length) {
+            String nomeNavio = sequenciaDeNavios[indiceNavioAtual].getNome();
+            String direcao = obterTextoOrientacaoAmigavel();
+
+            labelInstrucoes.setText(
+                    String.format("FASE DE POSICIONAMENTO | Navio: %s | Orientação: %s [Pressione 'R' para Girar]",
+                            nomeNavio, direcao)
+            );
+        }
     }
 
     public void viewMenu(){
@@ -74,51 +112,124 @@ public class GameController {
 
                         // Ações do usuário no próprio tabuleiro
                         if (isPlayerGrid && indiceNavioAtual < sequenciaDeNavios.length) {
+
                             Embarcacao navioParaPosicionar = sequenciaDeNavios[indiceNavioAtual];
-
                             boolean sucesso = tabuleiro.posicionarEmbarcacao(navioParaPosicionar, r, c, orientacaoAtual);
-
                             if (sucesso) {
-                                // 1. Renderiza visualmente no grid do Jogador 1
                                 renderizarNavioNoGrid(grid, navioParaPosicionar, r, c, orientacaoAtual);
 
                                 // =======================================================================
                                 // LOGICA DE TESTE: Espelha o navio idêntico no Tabuleiro do Jogador 2
                                 // =======================================================================
-                                jogo.alternarJogador(); // Vai para o Jogador 2
-                                Tabuleiro tabJogador2 = jogo.getJogadorAtual().getTabuleiro();
 
+                                jogo.alternarJogador();
+                                Tabuleiro tabJogador2 = jogo.getJogadorAtual().getTabuleiro();
                                 // Instancia um novo navio do mesmo tipo para evitar referências duplicadas na memória
                                 Embarcacao navioEspelho = clonarNavioParaTeste(navioParaPosicionar);
                                 boolean sucessoEspelho = tabJogador2.posicionarEmbarcacao(navioEspelho, r, c, orientacaoAtual);
-
                                 System.out.println("[TESTE] Espelhando " + navioEspelho.getNome() + " no Player 2: " + (sucessoEspelho ? "Sucesso" : "Falha"));
+                                jogo.alternarJogador();
+                                indiceNavioAtual++;
 
-                                jogo.alternarJogador(); // Retorna o contexto ao Jogador 1
                                 // =======================================================================
-                                indiceNavioAtual++; // Próximo navio da lista
 
                                 if (indiceNavioAtual < sequenciaDeNavios.length) {
+                                    atualizarLabelInstrucoes();
                                     System.out.println("Próximo navio: " + sequenciaDeNavios[indiceNavioAtual].getNome());
                                 } else {
                                     System.out.println("Todos os navios posicionados! Fase de combate iniciada.");
-                                    faseDePosicionamento = false;
+                                    faseDePosicionamento = false;labelInstrucoes.setText("FASE DE COMBATE! Sua vez de atacar: Escolha uma célula no tabuleiro inimigo.");
+                                    labelInstrucoes.setStyle("-fx-text-fill: #c0392b; -fx-font-weight: bold;");
                                 }
                             }
                         }
                     } else {
-                        // Fase de combate: ações atacam o tabuleiro adversário
-                        if (!isPlayerGrid){
-                            Resultado resultado = tabuleiro.receberAtaque(r, c);
+
+                        // =======================================================================
+                        // FASE DE COMBATE: TURNO DO JOGADOR 1
+                        // =======================================================================
+
+                        if (!isPlayerGrid) {
+                            Posicao posAlvo = jogo.getOponente().getTabuleiro().getPosicao(new Posicao(r, c));
+
+                            if (posAlvo.jaFoiAtacada()) {
+                                labelInstrucoes.setText("Você já atacou essa célula! Escolha outra.");
+                                return;
+                            }
+
+                            Resultado resultado = jogo.getOponente().getTabuleiro().receberAtaque(r, c);
                             atualizarCelula(cell, resultado);
+
+                            if (jogo.getOponente().getTabuleiro().todasEmbarcacoesDestruidas()) {
+                                labelInstrucoes.setText("VITÓRIA! Você destruiu toda a frota inimiga!");
+                                enemyBoard.setDisable(true); // Freeze interface
+                                return;
+                            }
+
+                            // =======================================================================
+                            // FASE DE COMBATE: TURNO DO JOGADOR 2 (Máquina)
+                            // =======================================================================
+
+                            executarTurnoDaMaquina();
                         }
                     }
                 });
 
-               grid.add(cell, col, row);
+                grid.add(cell, col, row);
             }
         }
     }
+
+    // Ataque do jogador 2 (Máquina)
+    private void executarTurnoDaMaquina() {
+        Tabuleiro tabJogador = jogo.getJogadorAtual().getTabuleiro();
+        int tamanho = tabJogador.getTamanho();
+
+        int linhaAlvo = 0;
+        int colunaAlvo = 0;
+        boolean coordenadaValidaFound = false;
+
+        // Varre o tabuleiro e procura uma célula não atacada
+        while (!coordenadaValidaFound) {
+            linhaAlvo = random.nextInt(tamanho);
+            colunaAlvo = random.nextInt(tamanho);
+
+            Posicao posVerificacao = tabJogador.getPosicao(new Posicao(linhaAlvo, colunaAlvo));
+            if (!posVerificacao.jaFoiAtacada()) {
+                coordenadaValidaFound = true;
+            }
+        }
+
+
+        Resultado resultadoAI = tabJogador.receberAtaque(linhaAlvo, colunaAlvo);
+        System.out.printf("[MÁQUINA ATACOU] -> [%d, %d] Resultou em: %s\n", linhaAlvo, colunaAlvo, resultadoAI);
+
+        // Atualiza UI
+        Button botaoJogador = obterBotaoNoGrid(playerBoard, linhaAlvo, colunaAlvo);
+        if (botaoJogador != null) {
+            atualizarCelula(botaoJogador, resultadoAI);
+        }
+
+        if (tabJogador.todasEmbarcacoesDestruidas()) {
+            labelInstrucoes.setText("DERROTA! A Máquina destruiu todas as suas embarcações.");
+            enemyBoard.setDisable(true);
+        }
+    }
+
+    // Método que pega a exata instancia do botão para ser manipulada durante o jogo
+    private Button obterBotaoNoGrid(GridPane grid, int linha, int coluna) {
+        for (Node node : grid.getChildren()) {
+            Integer nodeCol = GridPane.getColumnIndex(node);
+            Integer nodeRow = GridPane.getRowIndex(node);
+
+            if (nodeCol != null && nodeRow != null && nodeCol == coluna && nodeRow == linha && node instanceof Button) {
+                return (Button) node;
+            }
+        }
+        return null;
+    }
+
+    // Muda a cor da célula de acordo com o ataque
     private void atualizarCelula(Button cell, Resultado r){
         if(r == Resultado.ACERTOU){
             cell.setStyle("-fx-background-color: red;");
@@ -132,7 +243,7 @@ public class GameController {
         this.orientacaoAtual = orientacao;
     }
 
-    // Método utilitário visuall para que altera estado da celula para indicar posicionamento
+    // Método utilitário visual que altera estado da celula para indicar posicionamento
     private void renderizarNavioNoGrid(GridPane grid, Embarcacao navio, int linha, int coluna, Orientacao o) {
         for (int i = 0; i < navio.getTamanho(); i++) {
             int targetL = linha;
@@ -154,11 +265,37 @@ public class GameController {
             }
         }
     }
+
     // Factory method auxiliar para clonar a instância limpa do navio durante o loop de testes
     private Embarcacao clonarNavioParaTeste(Embarcacao navio) {
         if (navio instanceof Cruzador) return new Cruzador();
         if (navio instanceof Encouracado) return new Encouracado();
         if (navio instanceof PortaAvioes) return new PortaAvioes();
         return new Submarino();
+    }
+
+    public void setEnemyBoard(GridPane enemyBoard) {
+        this.enemyBoard = enemyBoard;
+    }
+
+    public void setSequenciaDeNavios(Embarcacao[] sequenciaDeNavios) {
+        this.sequenciaDeNavios = sequenciaDeNavios;
+    }
+
+    // Traduzindo horientação para interface
+    private String obterTextoOrientacaoAmigavel() {
+        if (this.orientacaoAtual == null) return "Não definida";
+        switch (this.orientacaoAtual) {
+            case HORIZONTAL:
+                return "Direita (Horizontal)";
+            case VERTICAL:
+                return "Cima (Vertical)";
+            case HORIZONTAL_INVERSA:
+                return "Esquerda (Horizontal Inversa)";
+            case VERTICAL_INVERSA:
+                return "Baixo (Vertical Inversa)";
+            default:
+                return this.orientacaoAtual.name();
+        }
     }
 }
