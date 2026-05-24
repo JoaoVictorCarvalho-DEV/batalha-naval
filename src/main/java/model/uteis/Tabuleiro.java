@@ -10,6 +10,7 @@ public class Tabuleiro {
     private List<Embarcacao> embarcacoes;
     private Posicao[][] matrizPosicao;
 
+    // Constructor
     public Tabuleiro(int tamanho) {
         this.tamanho = tamanho;
         this.matrizPosicao = new Posicao[tamanho][tamanho];
@@ -27,12 +28,22 @@ public class Tabuleiro {
     public boolean posicionarEmbarcacao(Embarcacao embarcacao, int linha, int coluna, Orientacao orientacao){
         System.out.println("Posicionar embarcacao " + embarcacao.getNome());
 
+        // Valida as posições sem posicionar de fato a embaração
         for(int i = 0; i < embarcacao.getTamanho(); i++){
+            int lAtual = linha;
+            int cAtual = coluna;
 
-            if(!testarPosicao(embarcacao, linha, coluna, orientacao)){
+            if(orientacao == Orientacao.VERTICAL) lAtual = linha - i;
+            if(orientacao == Orientacao.HORIZONTAL) cAtual = coluna + i;
+            if(orientacao == Orientacao.VERTICAL_INVERSA) lAtual = linha + i;
+            if(orientacao == Orientacao.HORIZONTAL_INVERSA) cAtual = coluna - i;
+
+            if(!testarPosicao(embarcacao, lAtual, cAtual, linha, coluna, orientacao)){
                 return false;
             }
+        }
 
+        for(int i = 0; i < embarcacao.getTamanho(); i++){
             if(orientacao == Orientacao.VERTICAL){
                 System.out.println("Embarcacao " + embarcacao.getNome() + " foi posicionada na linha" + (linha - i) + " e coluna " + coluna);
                 matrizPosicao[linha - i][coluna].ocupar(embarcacao);
@@ -46,47 +57,26 @@ public class Tabuleiro {
                 matrizPosicao[linha + i][coluna].ocupar(embarcacao);
             }
 
-            if(orientacao == Orientacao.HORIZONTAL_INVERSA){
+            if(orientacao == Orientacao.HORIZONTAL_INVERSA) {
                 System.out.println("Embarcacao " + embarcacao.getNome() + " foi posicionada na linha" + linha + " e coluna " + (coluna - i));
                 matrizPosicao[linha][coluna - i].ocupar(embarcacao);
             }
-
         }
         return true;
     }
 
-    private boolean testarPosicao(Embarcacao embarcacao, int linha, int coluna, Orientacao orientacao){
-
-        if(matrizPosicao[linha][coluna].temEmbarcacao() && matrizPosicao[linha][coluna].getEmbarcacao() != embarcacao){
-            System.out.printf("A posicao [%d][%d] já está ocupada.\n", linha, coluna );
+    private boolean testarPosicao(Embarcacao embarcacao, int lAtual, int cAtual, int linhaBase, int colunaBase, Orientacao orientacao){
+        // Checando limites da matriz
+        if (lAtual < 0 || lAtual >= this.tamanho || cAtual < 0 || cAtual >= this.tamanho) {
+            System.out.println("Tamanho da embarcacao excede os limites do tabuleiro.");
             return false;
         }
-        if(orientacao == Orientacao.VERTICAL){
-            if((linha + 1) - embarcacao.getTamanho() < 0){
-                System.out.println("Tamanho da embarcacao excede o tamanho do tabuleiro em:  " + ( (linha + 1) - embarcacao.getTamanho()));
-                return false ;
-            }
-        }
-        if(orientacao == Orientacao.HORIZONTAL){
-            if((coluna + 1) - embarcacao.getTamanho() > this.tamanho){
-                System.out.println("Tamanho da embarcacao excede o tamanho do tabuleiro em:  " + ( (coluna + 1) + embarcacao.getTamanho()));
-                return false ;
-            }
-        }
-        if(orientacao == Orientacao.VERTICAL_INVERSA){
-            if((linha + 1) + embarcacao.getTamanho() > this.tamanho){
-                System.out.println("Tamanho da embarcacao excede o tamanho do tabuleiro em:  " + ( (linha + 1) + embarcacao.getTamanho()));
-                return false ;
-            }
-        }
 
-        if(orientacao == Orientacao.HORIZONTAL_INVERSA){
-            if((coluna + 1) - embarcacao.getTamanho() < 0){
-                System.out.println("Tamanho da embarcacao excede o tamanho do tabuleiro em:  " + ( (coluna + 1) - embarcacao.getTamanho()));
-                return false ;
-            }
+        // Checando se a posição está ocupada
+        if(matrizPosicao[lAtual][cAtual].temEmbarcacao() && matrizPosicao[lAtual][cAtual].getEmbarcacao() != embarcacao){
+            System.out.printf("A posicao [%d][%d] já está ocupada.\n", lAtual, cAtual);
+            return false;
         }
-
         return true;
     }
 
