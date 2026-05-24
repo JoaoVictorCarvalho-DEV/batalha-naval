@@ -4,12 +4,13 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-
+import database.DatabaseInitializer;
 public class Main extends Application {
     private static Stage stage;
     @Override
     public void start(Stage primaryStage) throws Exception {
         stage = primaryStage;
+        DatabaseInitializer.init();
         changeScreen("menu.fxml");
         stage.show();
     }

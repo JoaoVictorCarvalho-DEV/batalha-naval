@@ -1,7 +1,11 @@
 package controller.game;
 
+import java.time.LocalDateTime;
+
 import app.Main;
+import database.Database;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 import model.embarcacoes.*;
@@ -9,6 +13,7 @@ import model.uteis.*;
 import javafx.scene.control.Label;
 import java.util.Random;
 import javafx.scene.Node;
+import repository.PontuacaoRepository;
 
 public class GameController {
 
@@ -27,10 +32,13 @@ public class GameController {
     private int indiceNavioAtual = 0;
     private Embarcacao[] sequenciaDeNavios;
     private Orientacao orientacaoAtual = Orientacao.HORIZONTAL; // Horientação padrão
+    private PontuacaoRepository pontuacaoRepository = new PontuacaoRepository(Database.getInstance().getConnection());
+    private long tempoInicio;
 
     @FXML
     public void initialize() {
         jogo = new Jogo("Jogador 1", "Jogador 2");
+        tempoInicio = System.currentTimeMillis();
 
         // Sequência de posicionamento
         sequenciaDeNavios = new Embarcacao[]{
@@ -64,16 +72,11 @@ public class GameController {
 
                     atualizarLabelInstrucoes();
                 }
-            } else {
-
-
             }
         });
 
         playerBoard.setFocusTraversable(true);
         playerBoard.requestFocus();
-
-
     }
 
     // Atualiza UI para mostrar orietação atual do usuário
@@ -297,5 +300,46 @@ public class GameController {
             default:
                 return this.orientacaoAtual.name();
         }
+    }
+
+    private void finalizarJogo() {
+        // Calcula a duração em segundos
+        long tempoFim = System.currentTimeMillis();
+        long duracaoSegundos = (tempoFim - tempoInicio) / 1000;
+
+        // Verifica quem venceu para determinar o nome do vencedor no objeto Pontuacao
+        String nomeVencedor;
+        if (jogo.getOponente().getTabuleiro().todasEmbarcacoesDestruidas()) {
+            nomeVencedor = jogo.getJogadorAtual().getNome(); // Jogador 1 ganhou
+        } else {
+            nomeVencedor = jogo.getOponente().getNome(); // Máquina ganhou
+        }
+
+        // Cria o objeto Pontuacao
+        Pontuacao pontuacao = new Pontuacao(
+                jogo.getJogadorAtual().getNome(),
+                jogo.getOponente().getNome(),
+                nomeVencedor,
+                (jogo.getJogadorAtual().getTiros() + jogo.getOponente().getTiros()),
+                duracaoSegundos,
+                LocalDateTime.now()
+        );
+        
+        // Salva no banco de dados
+        boolean salvou = pontuacaoRepository.salvarPontuacao(pontuacao);
+        
+        if (salvou) {
+            mostrarMensagem("Pontuação salva com sucesso!", Alert.AlertType.INFORMATION);
+        } else {
+            mostrarMensagem("Erro ao salvar pontuação!", Alert.AlertType.ERROR);
+        }
+    }
+
+    private void mostrarMensagem(String mensagem, Alert.AlertType tipo) {
+        Alert alert = new Alert(tipo);
+        alert.setTitle("Informação");
+        alert.setHeaderText(null);
+        alert.setContentText(mensagem);
+        alert.showAndWait();
     }
 }

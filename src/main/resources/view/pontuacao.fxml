@@ -11,12 +11,9 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.PontuacaoController">
 
-    <!-- TOPO -->
     <top>
         <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-background-color: dodgerblue; -fx-padding: 10;">
-
             <Button onAction="#viewMenu" text="Voltar" />
-
             <Label text="Pontuação" textFill="#fafafa">
                 <font>
                     <Font name="Cascadia Code Regular" size="18.0" />
@@ -25,15 +22,15 @@
         </HBox>
     </top>
 
-    <!-- CENTRO -->
     <center>
-        <TableView VBox.vgrow="ALWAYS">
+        <TableView fx:id="tableViewPontuacao" VBox.vgrow="ALWAYS">
             <columns>
-                <TableColumn text="Jogador 1" />
-                <TableColumn text="Jogador 2" />
-                <TableColumn text="N. de jogadas" />
-                <TableColumn text="Tempo de jogo" />
-                <TableColumn text="Data do jogo" />
+                <TableColumn fx:id="colJogador1" text="Jogador 1" />
+                <TableColumn fx:id="colJogador2" text="Jogador 2" />
+                <TableColumn fx:id="colVencedor" text="Vencedor" />
+                <TableColumn fx:id="colNumeroJogadas" text="N. de jogadas" />
+                <TableColumn fx:id="colDuracao" text="Duração (segundos)" />
+                <TableColumn fx:id="colDataPartida" text="Data do jogo" />
             </columns>
         </TableView>
     </center>
