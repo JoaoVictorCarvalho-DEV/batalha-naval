@@ -33,6 +33,7 @@ public class GameController {
     private Embarcacao[] sequenciaDeNavios;
     private Orientacao orientacaoAtual = Orientacao.HORIZONTAL; // Horientação padrão
     private PontuacaoRepository pontuacaoRepository = new PontuacaoRepository(Database.getInstance().getConnection());
+
     private long tempoInicio;
 
     @FXML
@@ -41,7 +42,7 @@ public class GameController {
         tempoInicio = System.currentTimeMillis();
 
         // Sequência de posicionamento
-        sequenciaDeNavios = new Embarcacao[]{
+        sequenciaDeNavios = new Embarcacao[] {
                 new Cruzador(),
                 new Encouracado(),
                 new PortaAvioes(),
@@ -87,15 +88,103 @@ public class GameController {
 
             labelInstrucoes.setText(
                     String.format("FASE DE POSICIONAMENTO | Navio: %s | Orientação: %s [Pressione 'R' para Girar]",
-                            nomeNavio, direcao)
-            );
+                            nomeNavio, direcao));
         }
     }
 
-    public void viewMenu(){
+    public void viewMenu() {
         Main.changeScreen("menu.fxml");
     }
 
+    private void handleCellClick(
+            GridPane grid,
+            Tabuleiro tabuleiro,
+            boolean isPlayerGrid,
+            Button cell,
+            int row,
+            int col) {
+
+        if (faseDePosicionamento) {
+            handlePosicionamento(grid, tabuleiro, cell, row, col, isPlayerGrid);
+            return;
+        }
+
+        handleCombate(cell, row, col, isPlayerGrid);
+    }
+
+    private void handleCombate(Button cell, int row, int col, boolean isPlayerGrid) {
+        // =======================================================================
+        // FASE DE COMBATE: TURNO DO JOGADOR 1
+        // =======================================================================
+
+        if (!isPlayerGrid) {
+            Posicao posAlvo = jogo.getOponente().getTabuleiro().getPosicao(new Posicao(row, col));
+
+            if (posAlvo.jaFoiAtacada()) {
+                labelInstrucoes.setText("Você já atacou essa célula! Escolha outra.");
+                return;
+            }
+
+            Resultado resultado = jogo.getOponente().getTabuleiro().receberAtaque(row, col);
+            atualizarCelula(cell, resultado);
+
+            if (jogo.getOponente().getTabuleiro().todasEmbarcacoesDestruidas()) {
+                labelInstrucoes.setText("VITÓRIA! Você destruiu toda a frota inimiga!");
+                enemyBoard.setDisable(true); // Freeze interface
+                return;
+            }
+
+            // =======================================================================
+            // FASE DE COMBATE: TURNO DO JOGADOR 2 (Máquina)
+            // =======================================================================
+
+            executarTurnoDaMaquina();
+        }
+    }
+
+    private void handlePosicionamento(GridPane grid, Tabuleiro tabuleiro, Button cell, int row, int col,
+            boolean isPlayerGrid) {
+        // Ações do usuário no próprio tabuleiro
+        if (isPlayerGrid && indiceNavioAtual < sequenciaDeNavios.length) {
+
+            Embarcacao navioParaPosicionar = sequenciaDeNavios[indiceNavioAtual];
+            boolean sucesso = tabuleiro.posicionarEmbarcacao(navioParaPosicionar, row, col,
+                    orientacaoAtual);
+            if (sucesso) {
+                renderizarNavioNoGrid(grid, navioParaPosicionar, row, col, orientacaoAtual);
+
+                // =======================================================================
+                // LOGICA DE TESTE: Espelha o navio idêntico no Tabuleiro do Jogador 2
+                // =======================================================================
+
+                jogo.alternarJogador();
+                Tabuleiro tabJogador2 = jogo.getJogadorAtual().getTabuleiro();
+                // Instancia um novo navio do mesmo tipo para evitar referências duplicadas na
+                // memória
+                Embarcacao navioEspelho = clonarNavioParaTeste(navioParaPosicionar);
+                boolean sucessoEspelho = tabJogador2.posicionarEmbarcacao(navioEspelho, row, col,
+                        orientacaoAtual);
+                System.out.println("[TESTE] Espelhando " + navioEspelho.getNome() + " no Player 2: "
+                        + (sucessoEspelho ? "Sucesso" : "Falha"));
+                jogo.alternarJogador();
+                indiceNavioAtual++;
+
+                // =======================================================================
+
+                if (indiceNavioAtual < sequenciaDeNavios.length) {
+                    atualizarLabelInstrucoes();
+                    System.out
+                            .println("Próximo navio: " + sequenciaDeNavios[indiceNavioAtual].getNome());
+                } else {
+                    System.out.println("Todos os navios posicionados! Fase de combate iniciada.");
+                    faseDePosicionamento = false;
+                    labelInstrucoes.setText(
+                            "FASE DE COMBATE! Sua vez de atacar: Escolha uma célula no tabuleiro inimigo.");
+                    labelInstrucoes.setStyle("-fx-text-fill: #c0392b; -fx-font-weight: bold;");
+                }
+            }
+        }
+    }
 
     private void buildBoard(GridPane grid, Tabuleiro tabuleiro, boolean isPlayerGrid) {
         int size = tabuleiro.getTamanho();
@@ -109,74 +198,13 @@ public class GameController {
                 int r = row;
                 int c = col;
 
-                cell.setOnAction(e -> {
-                    // Fase de posicionamento: Ações posicionam embaração no tabuleiro
-                    if (faseDePosicionamento) {
-
-                        // Ações do usuário no próprio tabuleiro
-                        if (isPlayerGrid && indiceNavioAtual < sequenciaDeNavios.length) {
-
-                            Embarcacao navioParaPosicionar = sequenciaDeNavios[indiceNavioAtual];
-                            boolean sucesso = tabuleiro.posicionarEmbarcacao(navioParaPosicionar, r, c, orientacaoAtual);
-                            if (sucesso) {
-                                renderizarNavioNoGrid(grid, navioParaPosicionar, r, c, orientacaoAtual);
-
-                                // =======================================================================
-                                // LOGICA DE TESTE: Espelha o navio idêntico no Tabuleiro do Jogador 2
-                                // =======================================================================
-
-                                jogo.alternarJogador();
-                                Tabuleiro tabJogador2 = jogo.getJogadorAtual().getTabuleiro();
-                                // Instancia um novo navio do mesmo tipo para evitar referências duplicadas na memória
-                                Embarcacao navioEspelho = clonarNavioParaTeste(navioParaPosicionar);
-                                boolean sucessoEspelho = tabJogador2.posicionarEmbarcacao(navioEspelho, r, c, orientacaoAtual);
-                                System.out.println("[TESTE] Espelhando " + navioEspelho.getNome() + " no Player 2: " + (sucessoEspelho ? "Sucesso" : "Falha"));
-                                jogo.alternarJogador();
-                                indiceNavioAtual++;
-
-                                // =======================================================================
-
-                                if (indiceNavioAtual < sequenciaDeNavios.length) {
-                                    atualizarLabelInstrucoes();
-                                    System.out.println("Próximo navio: " + sequenciaDeNavios[indiceNavioAtual].getNome());
-                                } else {
-                                    System.out.println("Todos os navios posicionados! Fase de combate iniciada.");
-                                    faseDePosicionamento = false;labelInstrucoes.setText("FASE DE COMBATE! Sua vez de atacar: Escolha uma célula no tabuleiro inimigo.");
-                                    labelInstrucoes.setStyle("-fx-text-fill: #c0392b; -fx-font-weight: bold;");
-                                }
-                            }
-                        }
-                    } else {
-
-                        // =======================================================================
-                        // FASE DE COMBATE: TURNO DO JOGADOR 1
-                        // =======================================================================
-
-                        if (!isPlayerGrid) {
-                            Posicao posAlvo = jogo.getOponente().getTabuleiro().getPosicao(new Posicao(r, c));
-
-                            if (posAlvo.jaFoiAtacada()) {
-                                labelInstrucoes.setText("Você já atacou essa célula! Escolha outra.");
-                                return;
-                            }
-
-                            Resultado resultado = jogo.getOponente().getTabuleiro().receberAtaque(r, c);
-                            atualizarCelula(cell, resultado);
-
-                            if (jogo.getOponente().getTabuleiro().todasEmbarcacoesDestruidas()) {
-                                labelInstrucoes.setText("VITÓRIA! Você destruiu toda a frota inimiga!");
-                                enemyBoard.setDisable(true); // Freeze interface
-                                return;
-                            }
-
-                            // =======================================================================
-                            // FASE DE COMBATE: TURNO DO JOGADOR 2 (Máquina)
-                            // =======================================================================
-
-                            executarTurnoDaMaquina();
-                        }
-                    }
-                });
+                cell.setOnAction(e -> handleCellClick(
+                        grid,
+                        tabuleiro,
+                        isPlayerGrid,
+                        cell,
+                        r,
+                        c));
 
                 grid.add(cell, col, row);
             }
@@ -202,7 +230,6 @@ public class GameController {
                 coordenadaValidaFound = true;
             }
         }
-
 
         Resultado resultadoAI = tabJogador.receberAtaque(linhaAlvo, colunaAlvo);
         System.out.printf("[MÁQUINA ATACOU] -> [%d, %d] Resultou em: %s\n", linhaAlvo, colunaAlvo, resultadoAI);
@@ -233,8 +260,8 @@ public class GameController {
     }
 
     // Muda a cor da célula de acordo com o ataque
-    private void atualizarCelula(Button cell, Resultado r){
-        if(r == Resultado.ACERTOU){
+    private void atualizarCelula(Button cell, Resultado r) {
+        if (r == Resultado.ACERTOU) {
             cell.setStyle("-fx-background-color: red;");
         } else {
             cell.setStyle("-fx-background-color: gray;");
@@ -246,22 +273,28 @@ public class GameController {
         this.orientacaoAtual = orientacao;
     }
 
-    // Método utilitário visual que altera estado da celula para indicar posicionamento
+    // Método utilitário visual que altera estado da celula para indicar
+    // posicionamento
     private void renderizarNavioNoGrid(GridPane grid, Embarcacao navio, int linha, int coluna, Orientacao o) {
         for (int i = 0; i < navio.getTamanho(); i++) {
             int targetL = linha;
             int targetC = coluna;
 
-            if (o == Orientacao.VERTICAL) targetL = linha - i;
-            if (o == Orientacao.HORIZONTAL) targetC = coluna + i;
-            if (o == Orientacao.VERTICAL_INVERSA) targetL = linha + i;
-            if (o == Orientacao.HORIZONTAL_INVERSA) targetC = coluna - i;
+            if (o == Orientacao.VERTICAL)
+                targetL = linha - i;
+            if (o == Orientacao.HORIZONTAL)
+                targetC = coluna + i;
+            if (o == Orientacao.VERTICAL_INVERSA)
+                targetL = linha + i;
+            if (o == Orientacao.HORIZONTAL_INVERSA)
+                targetC = coluna - i;
 
             for (javafx.scene.Node node : grid.getChildren()) {
                 Integer nodeCol = GridPane.getColumnIndex(node);
                 Integer nodeRow = GridPane.getRowIndex(node);
 
-                if (nodeCol != null && nodeRow != null && nodeCol == targetC && nodeRow == targetL && node instanceof Button) {
+                if (nodeCol != null && nodeRow != null && nodeCol == targetC && nodeRow == targetL
+                        && node instanceof Button) {
                     node.setStyle("-fx-background-color: #2c3e50; -fx-text-fill: white;");
                     ((Button) node).setText(navio.getNome().substring(0, 1));
                 }
@@ -269,11 +302,15 @@ public class GameController {
         }
     }
 
-    // Factory method auxiliar para clonar a instância limpa do navio durante o loop de testes
+    // Factory method auxiliar para clonar a instância limpa do navio durante o loop
+    // de testes
     private Embarcacao clonarNavioParaTeste(Embarcacao navio) {
-        if (navio instanceof Cruzador) return new Cruzador();
-        if (navio instanceof Encouracado) return new Encouracado();
-        if (navio instanceof PortaAvioes) return new PortaAvioes();
+        if (navio instanceof Cruzador)
+            return new Cruzador();
+        if (navio instanceof Encouracado)
+            return new Encouracado();
+        if (navio instanceof PortaAvioes)
+            return new PortaAvioes();
         return new Submarino();
     }
 
@@ -287,7 +324,8 @@ public class GameController {
 
     // Traduzindo horientação para interface
     private String obterTextoOrientacaoAmigavel() {
-        if (this.orientacaoAtual == null) return "Não definida";
+        if (this.orientacaoAtual == null)
+            return "Não definida";
         switch (this.orientacaoAtual) {
             case HORIZONTAL:
                 return "Direita (Horizontal)";
@@ -322,12 +360,11 @@ public class GameController {
                 nomeVencedor,
                 (jogo.getJogadorAtual().getTiros() + jogo.getOponente().getTiros()),
                 duracaoSegundos,
-                LocalDateTime.now()
-        );
-        
+                LocalDateTime.now());
+
         // Salva no banco de dados
         boolean salvou = pontuacaoRepository.salvarPontuacao(pontuacao);
-        
+
         if (salvou) {
             mostrarMensagem("Pontuação salva com sucesso!", Alert.AlertType.INFORMATION);
         } else {
