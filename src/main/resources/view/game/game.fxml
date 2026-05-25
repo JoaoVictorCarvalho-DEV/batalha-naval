@@ -14,16 +14,28 @@
             fx:controller="controller.game.GameController"
             prefHeight="400.0" prefWidth="600.0">
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="50" style="-fx-background-color: dodgerblue; -fx-padding: 10;">
-            <children>
-                <Button mnemonicParsing="false" onAction="#viewMenu" onMouseClicked="#viewMenu" text="Voltar" />
-                <Label prefHeight="18.0" prefWidth="200.0" text="Batalha naval" textFill="WHITE">
-                    <font>
-                        <Font name="Cascadia Code Regular" size="18.0" />
-                    </font>
-                </Label>
-            </children>
-        </HBox>
+        <VBox>
+            <HBox alignment="CENTER_LEFT" spacing="50" style="-fx-background-color: dodgerblue; -fx-padding: 10;">
+                <children>
+                    <Button mnemonicParsing="false" onAction="#viewMenu" text="Voltar" />
+                    <Label prefHeight="18.0" prefWidth="200.0" text="Batalha Naval" textFill="WHITE">
+                        <font>
+                            <Font name="Cascadia Code Regular" size="18.0" />
+                        </font>
+                    </Label>
+                </children>
+            </HBox>
+
+            <HBox alignment="CENTER" style="-fx-background-color: #ecf0f1; -fx-padding: 8;">
+                <children>
+                    <Label fx:id="labelInstrucoes" text="FASE DE POSICIONAMENTO: Pressione 'R' para rotacionar o navio">
+                        <font>
+                            <Font name="Cascadia Code Regular" size="14.0" />
+                        </font>
+                    </Label>
+                </children>
+            </HBox>
+        </VBox>
     </top>
 
     <center>

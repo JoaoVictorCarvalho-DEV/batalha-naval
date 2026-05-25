@@ -37,7 +37,7 @@ public class Jogo {
     }
 
     public void alternarJogador() {
-        System.out.println("Trocar de jogador " + jogadorAtual.getNome() + " para " + getOponente().getNome());
+        System.out.println("Trocando de jogador");
         jogadorAtual = (jogadorAtual == jogador1) ? jogador2 : jogador1;
     }
 }

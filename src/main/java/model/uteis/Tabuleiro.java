@@ -97,9 +97,18 @@ public class Tabuleiro {
         }
     }
 
-    public boolean todasEmbarcacoesDestruidas(){
-        System.out.println("Todas as embarcacoe nao destruidas");
-        return false;
+    // Varre todo o tabuleiro procurando uma embarcação não atacada
+    public boolean todasEmbarcacoesDestruidas() {
+        for (int i = 0; i < tamanho; i++) {
+            for (int j = 0; j < tamanho; j++) {
+                Posicao pos = matrizPosicao[i][j];
+                if (pos.temEmbarcacao() && !pos.jaFoiAtacada()) {
+                    return false;
+                }
+            }
+        }
+        System.out.println("Fim de Jogo! Todas as embarcações deste tabuleiro foram destruídas.");
+        return true;
     }
 
     public Posicao getPosicao(Posicao posicao){
