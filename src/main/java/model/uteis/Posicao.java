@@ -30,7 +30,7 @@ public class Posicao {
     }
 
 
-    public Resultado atacar() {
+    public Resultado receberAtaque() {
         if (foiAtacada) {
             return Resultado.JA_ATACADO;
         }

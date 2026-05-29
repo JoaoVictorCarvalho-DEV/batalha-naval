@@ -22,9 +22,12 @@ public class Jogo {
     }
 
     public Resultado atacar(int linha, int coluna) {
-        Resultado resultado = getOponente().getTabuleiro().receberAtaque(linha, coluna);
+        Tabuleiro tabuleiroInimigo = getOponente().getTabuleiro();
+        Resultado resultado = getJogadorAtual().atirar(tabuleiroInimigo, linha, coluna);
 
-        if (resultado != Resultado.JA_ATACADO) {
+        System.out.println("Resultado: " + resultado);
+        
+        if (resultado == Resultado.ERROU) {
             alternarJogador();
         }
 
@@ -37,7 +40,7 @@ public class Jogo {
     }
 
     public void alternarJogador() {
-        System.out.println("Trocando de jogador");
         jogadorAtual = (jogadorAtual == jogador1) ? jogador2 : jogador1;
+        System.out.println("Trocando para o jogador: "+ jogadorAtual.getNome());
     }
 }

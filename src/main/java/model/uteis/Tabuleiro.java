@@ -84,7 +84,7 @@ public class Tabuleiro {
     public Resultado receberAtaque(int linha, int coluna){
         Posicao posicao = matrizPosicao[linha][coluna];
 
-        return posicao.atacar();
+        return posicao.receberAtaque();
     }
 
     public void exibirTabuleiro(boolean ocultarNavios){

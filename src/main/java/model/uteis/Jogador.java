@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class Jogador {
     private String nome;
-    public Tabuleiro tabuleiro;
+    private Tabuleiro tabuleiro;
     private int tiros;
     private int tirosAcertados;
     private int tirosConsecutivos;
@@ -19,7 +19,8 @@ public class Jogador {
         this.tirosConsecutivos = 0;
     }
 
-    public void atirar(Tabuleiro tabuleiro, Posicao posicao){
+    public Resultado atirar(Tabuleiro tabuleiro, int linha, int coluna){
+        return tabuleiro.receberAtaque(linha, coluna);
     }
 
 

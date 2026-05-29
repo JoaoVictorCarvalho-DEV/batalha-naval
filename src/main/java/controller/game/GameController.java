@@ -125,7 +125,7 @@ public class GameController {
                 return;
             }
 
-            Resultado resultado = jogo.getOponente().getTabuleiro().receberAtaque(row, col);
+            Resultado resultado = jogo.atacar(row, col);
             atualizarCelula(cell, resultado);
 
             if (jogo.getOponente().getTabuleiro().todasEmbarcacoesDestruidas()) {
@@ -134,11 +134,12 @@ public class GameController {
                 return;
             }
 
-            // =======================================================================
-            // FASE DE COMBATE: TURNO DO JOGADOR 2 (Máquina)
-            // =======================================================================
-
-            executarTurnoDaMaquina();
+            if (resultado == Resultado.ERROU) {
+                executarTurnoDaMaquina();
+                labelInstrucoes.setText("Máquina atacou.");
+            } else {
+                labelInstrucoes.setText("Acertou! Ataque novamente");
+            }
         }
     }
 
@@ -219,31 +220,48 @@ public class GameController {
         int linhaAlvo = 0;
         int colunaAlvo = 0;
         boolean coordenadaValidaFound = false;
+        boolean errou = false;
 
         // Varre o tabuleiro e procura uma célula não atacada
-        while (!coordenadaValidaFound) {
+        do {
+            /*
+             * //RETIRADO: POIS COM A LÓGICA DE APENAS TROCAR SE A MÁQUINA ERROU, ESSA PARTE É DESNECESSÁRIA
+             * do {
+             * linhaAlvo = random.nextInt(tamanho);
+             * colunaAlvo = random.nextInt(tamanho);
+             * 
+             * Posicao posVerificacao = tabJogador.getPosicao(new Posicao(linhaAlvo,
+             * colunaAlvo));
+             * if (!posVerificacao.jaFoiAtacada()) {
+             * coordenadaValidaFound = true;
+             * }
+             * } while (!coordenadaValidaFound);
+             */
+
             linhaAlvo = random.nextInt(tamanho);
             colunaAlvo = random.nextInt(tamanho);
 
-            Posicao posVerificacao = tabJogador.getPosicao(new Posicao(linhaAlvo, colunaAlvo));
-            if (!posVerificacao.jaFoiAtacada()) {
-                coordenadaValidaFound = true;
+            System.out.printf("[MÁQUINA ATACOU] -> [%d, %d]\n", linhaAlvo, colunaAlvo);
+
+            Resultado resultadoAI = jogo.atacar(linhaAlvo, colunaAlvo);
+
+            if (resultadoAI == Resultado.ERROU) {
+                errou = true;
             }
-        }
 
-        Resultado resultadoAI = tabJogador.receberAtaque(linhaAlvo, colunaAlvo);
-        System.out.printf("[MÁQUINA ATACOU] -> [%d, %d] Resultou em: %s\n", linhaAlvo, colunaAlvo, resultadoAI);
+            // Atualiza UI
+            Button botaoJogador = obterBotaoNoGrid(playerBoard, linhaAlvo, colunaAlvo);
+            if (botaoJogador != null) {
+                atualizarCelula(botaoJogador, resultadoAI);
+            }
 
-        // Atualiza UI
-        Button botaoJogador = obterBotaoNoGrid(playerBoard, linhaAlvo, colunaAlvo);
-        if (botaoJogador != null) {
-            atualizarCelula(botaoJogador, resultadoAI);
-        }
+            if (tabJogador.todasEmbarcacoesDestruidas()) {
+                labelInstrucoes.setText("DERROTA! A Máquina destruiu todas as suas embarcações.");
+                enemyBoard.setDisable(true);
+            }
 
-        if (tabJogador.todasEmbarcacoesDestruidas()) {
-            labelInstrucoes.setText("DERROTA! A Máquina destruiu todas as suas embarcações.");
-            enemyBoard.setDisable(true);
-        }
+        } while (!errou);
+
     }
 
     // Método que pega a exata instancia do botão para ser manipulada durante o jogo
