@@ -33,11 +33,11 @@
                 </font>
             </Label>
 
-            <TextField fx:id="txtPlayerName" promptText="Nome do jogador" maxWidth="250"/>
+            <TextField fx:id="txtNomeJogador" promptText="Nome do jogador" maxWidth="250"/>
 
-            <Label fx:id="lblError" textFill="red"/>
+            <Label fx:id="lblError" textFill="red" />
 
-            <Button text="Iniciar Jogo" onAction="#viewJogo"/>
+            <Button fx:id="btnIniciar" text="Iniciar Jogo" onAction="#viewJogo"/>
         </VBox>
     </center>
 </BorderPane>

@@ -3,6 +3,7 @@ package controller.game;
 import java.time.LocalDateTime;
 
 import app.Main;
+import app.Session;
 import database.Database;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -38,7 +39,7 @@ public class GameController {
 
     @FXML
     public void initialize() {
-        jogo = new Jogo("Jogador 1", "Jogador 2");
+        jogo = Session.getInstance().getJogoAtual();
         tempoInicio = System.currentTimeMillis();
 
         // Sequência de posicionamento
@@ -225,7 +226,8 @@ public class GameController {
         // Varre o tabuleiro e procura uma célula não atacada
         do {
             /*
-             * //RETIRADO: POIS COM A LÓGICA DE APENAS TROCAR SE A MÁQUINA ERROU, ESSA PARTE É DESNECESSÁRIA
+             * //RETIRADO: POIS COM A LÓGICA DE APENAS TROCAR SE A MÁQUINA ERROU, ESSA PARTE
+             * É DESNECESSÁRIA
              * do {
              * linhaAlvo = random.nextInt(tamanho);
              * colunaAlvo = random.nextInt(tamanho);
