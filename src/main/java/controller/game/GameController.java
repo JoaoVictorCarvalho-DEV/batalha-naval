@@ -44,9 +44,9 @@ public class GameController {
 
         // Sequência de posicionamento
         sequenciaDeNavios = new Embarcacao[] {
-                new Cruzador(),
+               /*  new Cruzador(),
                 new Encouracado(),
-                new PortaAvioes(),
+                new PortaAvioes(), */
                 new Submarino()
         };
 
@@ -132,6 +132,7 @@ public class GameController {
             if (jogo.getOponente().getTabuleiro().todasEmbarcacoesDestruidas()) {
                 labelInstrucoes.setText("VITÓRIA! Você destruiu toda a frota inimiga!");
                 enemyBoard.setDisable(true); // Freeze interface
+                finalizarJogo();
                 return;
             }
 
@@ -260,6 +261,7 @@ public class GameController {
             if (tabJogador.todasEmbarcacoesDestruidas()) {
                 labelInstrucoes.setText("DERROTA! A Máquina destruiu todas as suas embarcações.");
                 enemyBoard.setDisable(true);
+                finalizarJogo();
             }
 
         } while (!errou);
@@ -390,6 +392,8 @@ public class GameController {
         } else {
             mostrarMensagem("Erro ao salvar pontuação!", Alert.AlertType.ERROR);
         }
+
+        Main.changeScreen("pos-game.fxml");
     }
 
     private void mostrarMensagem(String mensagem, Alert.AlertType tipo) {
