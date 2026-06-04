@@ -20,7 +20,15 @@ public class Jogador {
     }
 
     public Resultado atirar(Tabuleiro tabuleiro, int linha, int coluna){
-        return tabuleiro.receberAtaque(linha, coluna);
+        Resultado resultado;
+        tiros++;
+        resultado = tabuleiro.receberAtaque(linha, coluna);
+
+        if(resultado == resultado.ACERTOU){
+            tirosAcertados++;
+        }
+
+        return resultado;
     }
 
 
@@ -54,6 +62,10 @@ public class Jogador {
 
     public int getTirosConsecutivos() {
         return tirosConsecutivos;
+    }
+
+    public void setTirosConsecutivos(int tirosConsecutivos){
+        this.tirosConsecutivos = tirosConsecutivos;
     }
 
     public Tabuleiro getTabuleiro() {

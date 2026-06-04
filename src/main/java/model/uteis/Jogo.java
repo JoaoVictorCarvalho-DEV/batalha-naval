@@ -6,11 +6,15 @@ public class Jogo {
     private Jogador jogador2;
     private Jogador jogadorAtual;
     private int tamanho = 10;
+    private long duracao;
+    private long tempoInicio;
 
     public Jogo(String nome1, String nome2) {
         this.jogador1 = new Jogador(nome1, new Tabuleiro(tamanho));
         this.jogador2 = new Jogador(nome2, new Tabuleiro(tamanho));
         this.jogadorAtual = jogador1;
+
+        tempoInicio = System.currentTimeMillis();
     }
 
     public Jogador getJogadorAtual() {
@@ -34,7 +38,24 @@ public class Jogo {
         return resultado;
     }
 
+    public long getDuracao(){
+        return duracao;
+    }
+
+    private void setDuracao(long tempoFim){
+
+        duracao = (tempoFim - tempoInicio) / 1000;
+    }
+
+    public void finalizarJogo(){
+        long tempoFim = System.currentTimeMillis();
+
+        setDuracao(tempoFim);
+        
+    }
+
     public boolean acabou() {
+
         return jogador1.getTabuleiro().todasEmbarcacoesDestruidas()
                 || jogador2.getTabuleiro().todasEmbarcacoesDestruidas();
     }

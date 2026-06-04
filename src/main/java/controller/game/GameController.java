@@ -38,12 +38,10 @@ public class GameController {
     private Orientacao orientacaoAtual = Orientacao.HORIZONTAL; // Horientação padrão
     private PontuacaoRepository pontuacaoRepository = new PontuacaoRepository(Database.getInstance().getConnection());
 
-    private long tempoInicio;
 
     @FXML
     public void initialize() {
         jogo = Session.getInstance().getJogoAtual();
-        tempoInicio = System.currentTimeMillis();
 
         eventManager = new EventManager();
         eventManager.addObserver(labelInstrucoes);
@@ -196,9 +194,7 @@ public class GameController {
                     eventManager.notifyObservers(
                             new Evento(TipoEvento.INFO,
                                     "FASE DE COMBATE! Sua vez de atacar: Escolha uma célula no tabuleiro inimigo."));
-                    /*
-                     * labelInstrucoes.setStyle("-fx-text-fill: #c0392b; -fx-font-weight: bold;");
-                     */
+
                 }
             }
         }
@@ -364,10 +360,8 @@ public class GameController {
     }
 
     private void finalizarJogo() {
-        // Calcula a duração em segundos
-        long tempoFim = System.currentTimeMillis();
-        long duracaoSegundos = (tempoFim - tempoInicio) / 1000;
-
+        long duracaoSegundos = jogo.getDuracao();
+        
         // Verifica quem venceu para determinar o nome do vencedor no objeto Pontuacao
         String nomeVencedor;
         if (jogo.getOponente().getTabuleiro().todasEmbarcacoesDestruidas()) {

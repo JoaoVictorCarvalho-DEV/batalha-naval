@@ -34,7 +34,7 @@ public class PontuacaoController implements Initializable {
     private TableColumn<Pontuacao, Long> colDuracao;
 
     @FXML
-    private TableColumn<Pontuacao, String> colDataPartida; // String - IMPORTANTE!
+    private TableColumn<Pontuacao, String> colDataPartida;
 
     private PontuacaoRepository pontuacaoRepository;
 
@@ -60,14 +60,13 @@ public class PontuacaoController implements Initializable {
     }
 
     private void configurarColunas() {
-        // Configura as colunas normais
         colJogador1.setCellValueFactory(new PropertyValueFactory<>("jogador1"));
         colJogador2.setCellValueFactory(new PropertyValueFactory<>("jogador2"));
         colVencedor.setCellValueFactory(new PropertyValueFactory<>("vencedor"));
         colNumeroJogadas.setCellValueFactory(new PropertyValueFactory<>("numeroJogadas"));
         colDuracao.setCellValueFactory(new PropertyValueFactory<>("duracao"));
 
-        // Configura a coluna de data - retornando String, não LocalDateTime
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         colDataPartida.setCellValueFactory(cellData -> {
