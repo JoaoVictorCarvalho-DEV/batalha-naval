@@ -10,8 +10,9 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 import model.embarcacoes.*;
+import model.observer.EventManager;
 import model.uteis.*;
-import javafx.scene.control.Label;
+import components.StatusLabel;
 import java.util.Random;
 import javafx.scene.Node;
 import repository.PontuacaoRepository;
@@ -23,7 +24,9 @@ public class GameController {
     @FXML
     public GridPane enemyBoard;
     @FXML
-    private Label labelInstrucoes;
+    private StatusLabel labelInstrucoes;
+
+    private EventManager eventManager;
 
     private Jogo jogo;
     private final Random random = new Random();
@@ -41,12 +44,17 @@ public class GameController {
     public void initialize() {
         jogo = Session.getInstance().getJogoAtual();
         tempoInicio = System.currentTimeMillis();
+        
+        eventManager = new EventManager();
+        eventManager.addObserver(labelInstrucoes);
 
         // Sequência de posicionamento
         sequenciaDeNavios = new Embarcacao[] {
-               /*  new Cruzador(),
-                new Encouracado(),
-                new PortaAvioes(), */
+                /*
+                 * new Cruzador(),
+                 * new Encouracado(),
+                 * new PortaAvioes(),
+                 */
                 new Submarino()
         };
 
@@ -54,6 +62,7 @@ public class GameController {
         System.out.println("Iniciando jogador:" + jogo.getJogadorAtual().getNome());
         buildBoard(playerBoard, jogo.getJogadorAtual().getTabuleiro(), true);
         jogo.alternarJogador();
+
         System.out.println("Iniciando jogador:" + jogo.getJogadorAtual().getNome());
         buildBoard(enemyBoard, jogo.getJogadorAtual().getTabuleiro(), false);
         jogo.alternarJogador();
@@ -87,7 +96,7 @@ public class GameController {
             String nomeNavio = sequenciaDeNavios[indiceNavioAtual].getNome();
             String direcao = obterTextoOrientacaoAmigavel();
 
-            labelInstrucoes.setText(
+            eventManager.notifyObservers(
                     String.format("FASE DE POSICIONAMENTO | Navio: %s | Orientação: %s [Pressione 'R' para Girar]",
                             nomeNavio, direcao));
         }
@@ -122,7 +131,7 @@ public class GameController {
             Posicao posAlvo = jogo.getOponente().getTabuleiro().getPosicao(new Posicao(row, col));
 
             if (posAlvo.jaFoiAtacada()) {
-                labelInstrucoes.setText("Você já atacou essa célula! Escolha outra.");
+                eventManager.notifyObservers("Você já atacou essa célula! Escolha outra.");
                 return;
             }
 
@@ -130,7 +139,7 @@ public class GameController {
             atualizarCelula(cell, resultado);
 
             if (jogo.getOponente().getTabuleiro().todasEmbarcacoesDestruidas()) {
-                labelInstrucoes.setText("VITÓRIA! Você destruiu toda a frota inimiga!");
+                eventManager.notifyObservers("VITÓRIA! Você destruiu toda a frota inimiga!");
                 enemyBoard.setDisable(true); // Freeze interface
                 finalizarJogo();
                 return;
@@ -138,9 +147,9 @@ public class GameController {
 
             if (resultado == Resultado.ERROU) {
                 executarTurnoDaMaquina();
-                labelInstrucoes.setText("Máquina atacou.");
+                eventManager.notifyObservers("Máquina atacou.");
             } else {
-                labelInstrucoes.setText("Acertou! Ataque novamente");
+                eventManager.notifyObservers("Acertou! Ataque novamente");
             }
         }
     }
@@ -181,9 +190,8 @@ public class GameController {
                 } else {
                     System.out.println("Todos os navios posicionados! Fase de combate iniciada.");
                     faseDePosicionamento = false;
-                    labelInstrucoes.setText(
-                            "FASE DE COMBATE! Sua vez de atacar: Escolha uma célula no tabuleiro inimigo.");
-                    labelInstrucoes.setStyle("-fx-text-fill: #c0392b; -fx-font-weight: bold;");
+                    eventManager.notifyObservers("FASE DE COMBATE! Sua vez de atacar: Escolha uma célula no tabuleiro inimigo.");
+                    /* labelInstrucoes.setStyle("-fx-text-fill: #c0392b; -fx-font-weight: bold;"); */
                 }
             }
         }
@@ -259,7 +267,7 @@ public class GameController {
             }
 
             if (tabJogador.todasEmbarcacoesDestruidas()) {
-                labelInstrucoes.setText("DERROTA! A Máquina destruiu todas as suas embarcações.");
+                eventManager.notifyObservers("DERROTA! A Máquina destruiu todas as suas embarcações.");
                 enemyBoard.setDisable(true);
                 finalizarJogo();
             }
