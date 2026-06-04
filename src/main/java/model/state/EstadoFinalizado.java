@@ -1,4 +1,6 @@
 package model.state;
 
-public class EstadoFinalizado {
+public class EstadoFinalizado implements EstadoJogo{
+    @Override
+    public String getNome() {return "FINALIZADO";}
 }

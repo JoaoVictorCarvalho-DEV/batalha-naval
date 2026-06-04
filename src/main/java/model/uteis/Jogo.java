@@ -1,5 +1,8 @@
 package model.uteis;
 
+import model.state.EstadoJogo;
+import model.state.EstadoPreJogo;
+
 public class Jogo {
 
     private Jogador jogador1;
@@ -8,6 +11,18 @@ public class Jogo {
     private int tamanho = 10;
     private long duracao;
     private long tempoInicio;
+
+    // State: representa a fase atual do jogo
+    private EstadoJogo estado = new EstadoPreJogo();
+
+    public void setEstado(EstadoJogo novoEstado){
+        System.out.println("[State} Transicao: "+ estado.getNome() + " -> " + novoEstado.getNome());
+        this.estado = novoEstado;
+    }
+
+    public EstadoJogo getEstado() {
+        return estado;
+    }
 
     public Jogo(String nome1, String nome2) {
         this.jogador1 = new Jogador(nome1, new Tabuleiro(tamanho));

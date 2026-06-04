@@ -1,4 +1,6 @@
 package model.state;
 
-public class EstadoJogo {
+// Padrão State: define o contrato para todos os estados do jogo
+public interface EstadoJogo {
+    String getNome();
 }

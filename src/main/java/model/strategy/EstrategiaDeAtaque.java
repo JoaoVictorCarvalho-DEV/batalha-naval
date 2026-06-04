@@ -1,4 +1,7 @@
 package model.strategy;
 
-public class EstrategiaDeAtaque {
+import model.uteis.Tabuleiro;
+public interface EstrategiaDeAtaque{
+    // Retorna [linha, coluna] da célula escolhida para atacar
+    int[] calcularPosicaoDeAtaque(Tabuleiro tabuleiro);
 }
