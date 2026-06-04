@@ -21,6 +21,10 @@ import model.uteis.*;
 import components.StatusLabel;
 import javafx.scene.Node;
 import repository.PontuacaoRepository;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
+import java.util.Random;
+
 
 public class GameController {
 
@@ -43,6 +47,7 @@ public class GameController {
     private Orientacao orientacaoAtual = Orientacao.HORIZONTAL; // Horientação padrão
     private PontuacaoRepository pontuacaoRepository = new PontuacaoRepository(Database.getInstance().getConnection());
 
+    private final Random random = new Random();
 
     @FXML
     public void initialize() {
@@ -237,37 +242,67 @@ public class GameController {
 
     // Ataque do jogador 2 (Máquina)
     private void executarTurnoDaMaquina() {
-        Tabuleiro tabJogador = jogo.getJogadorAtual().getTabuleiro();
-        boolean errou = false;
+        // Bloqueia o tabuleiro inimigo para o jogador não clicar enquanto a máquina joga
+        enemyBoard.setDisable(true);
 
-        do {
-            // Strategy: a decisão de onde atacar é delegada para a estratégia atual
-            int[] alvo = estrategiaDeAtaque.calcularPosicaoDeAtaque(tabJogador);
-            int linhaAlvo = alvo[0];
-            int colunaAlvo = alvo[1];
-            System.out.printf("[MÁQUINA ATACOU] -> [%d, %d]\n", linhaAlvo, colunaAlvo);
+        // Criamos uma tarefa em background para rodar o loop com delay de forma assíncrona
+        Task<Void> turnoMaquinaTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                Tabuleiro tabJogador = jogo.getJogadorAtual().getTabuleiro();
+                boolean errou = false;
 
-            Resultado resultadoAI = jogo.atacar(linhaAlvo, colunaAlvo);
+                do {
+                    // 1. Gera o delay aleatório no range de 2 segundos (ex: entre 400ms e 2000ms)
+                    long delayMs = 400 + (long) (random.nextDouble() * 1600);
+                    Thread.sleep(delayMs);
 
-            if (resultadoAI == Resultado.ERROU) {
-                errou = true;
+                    // 2. Processa a lógica de ataque naEngine/Model
+                    int[] alvo = estrategiaDeAtaque.calcularPosicaoDeAtaque(tabJogador);
+                    int linhaAlvo = alvo[0];
+                    int colunaAlvo = alvo[1];
+
+                    Resultado resultadoAI = jogo.atacar(linhaAlvo, colunaAlvo);
+                    System.out.printf("[MÁQUINA ATACOU] -> [%d, %d] - %s\n", linhaAlvo, colunaAlvo, resultadoAI);
+
+                    if (resultadoAI == Resultado.ERROU) {
+                        errou = true;
+                    }
+
+                    // 3. Modificações na Interface Gráfica (UI) precisam rodar dentro do Platform.runLater
+                    Platform.runLater(() -> {
+                        // Atualiza a célula atingida na tela
+                        Button botaoJogador = obterBotaoNoGrid(playerBoard, linhaAlvo, colunaAlvo);
+                        if (botaoJogador != null) {
+                            atualizarCelula(botaoJogador, resultadoAI);
+                        }
+
+                        // Verifica fim de jogo
+                        if (tabJogador.todasEmbarcacoesDestruidas()) {
+                            eventManager.notifyObservers(
+                                    new Evento(TipoEvento.DERROTA, "DERROTA! A Máquina destruiu todas as suas embarcações."));
+                            enemyBoard.setDisable(true);
+                            finalizarJogo();
+                        }
+                    });
+
+                } while (!errou && !tabJogador.todasEmbarcacoesDestruidas());
+
+                // 4. Quando o loop terminar (máquina errar), libera o tabuleiro para o jogador na UI Thread
+                Platform.runLater(() -> {
+                    if (!tabJogador.todasEmbarcacoesDestruidas()) {
+                        enemyBoard.setDisable(false);
+                    }
+                });
+
+                return null;
             }
+        };
 
-            // Atualiza UI
-            Button botaoJogador = obterBotaoNoGrid(playerBoard, linhaAlvo, colunaAlvo);
-            if (botaoJogador != null) {
-                atualizarCelula(botaoJogador, resultadoAI);
-            }
-
-            if (tabJogador.todasEmbarcacoesDestruidas()) {
-                eventManager.notifyObservers(
-                        new Evento(TipoEvento.DERROTA, "DERROTA! A Máquina destruiu todas as suas embarcações."));
-                enemyBoard.setDisable(true);
-                finalizarJogo();
-            }
-
-        } while (!errou);
-
+        // Inicializa a Thread em background para executar a Task
+        Thread thread = new Thread(turnoMaquinaTask);
+        thread.setDaemon(true); // Garante que a thread feche se a aplicação for encerrada
+        thread.start();
     }
 
     // Método que pega a exata instancia do botão para ser manipulada durante o jogo
