@@ -53,3 +53,5 @@ buildNumber.properties
 
 ### Log files ###
 *.log
+
+*.db
