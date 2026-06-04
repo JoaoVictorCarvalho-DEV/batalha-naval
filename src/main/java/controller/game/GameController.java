@@ -11,9 +11,14 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 import model.embarcacoes.*;
 import model.observer.EventManager;
+import model.state.EstadoFinalizado;
+import model.state.EstadoPartida;
+import model.state.EstadoPosicionamento;
+import model.state.EstadoPreJogo;
+import model.strategy.AtaqueAleatorio;
+import model.strategy.EstrategiaDeAtaque;
 import model.uteis.*;
 import components.StatusLabel;
-import java.util.Random;
 import javafx.scene.Node;
 import repository.PontuacaoRepository;
 
@@ -29,7 +34,7 @@ public class GameController {
     private EventManager eventManager;
 
     private Jogo jogo;
-    private final Random random = new Random();
+    private final EstrategiaDeAtaque estrategiaDeAtaque = new AtaqueAleatorio();
 
     // Variáveis para rastrear posicionamento;
     private boolean faseDePosicionamento = true;
@@ -43,16 +48,19 @@ public class GameController {
     public void initialize() {
         jogo = Session.getInstance().getJogoAtual();
 
+        jogo.setEstado(new EstadoPosicionamento());
+        System.out.println("[State] Estado atual: " + jogo.getEstado().getNome());
+
         eventManager = new EventManager();
         eventManager.addObserver(labelInstrucoes);
 
         // Sequência de posicionamento
         sequenciaDeNavios = new Embarcacao[] {
-                /*
-                 * new Cruzador(),
-                 * new Encouracado(),
-                 * new PortaAvioes(),
-                 */
+
+                new Cruzador(),
+                new Encouracado(),
+                new PortaAvioes(),
+
                 new Submarino()
         };
 
@@ -114,6 +122,7 @@ public class GameController {
             int row,
             int col) {
 
+        System.out.println("[State] Estado atual: " + jogo.getEstado().getNome());
         if (faseDePosicionamento) {
             handlePosicionamento(grid, tabuleiro, cell, row, col, isPlayerGrid);
             return;
@@ -190,6 +199,7 @@ public class GameController {
                             .println("Próximo navio: " + sequenciaDeNavios[indiceNavioAtual].getNome());
                 } else {
                     System.out.println("Todos os navios posicionados! Fase de combate iniciada.");
+                    jogo.setEstado(new EstadoPartida());
                     faseDePosicionamento = false;
                     eventManager.notifyObservers(
                             new Evento(TipoEvento.INFO,
@@ -228,18 +238,13 @@ public class GameController {
     // Ataque do jogador 2 (Máquina)
     private void executarTurnoDaMaquina() {
         Tabuleiro tabJogador = jogo.getJogadorAtual().getTabuleiro();
-        int tamanho = tabJogador.getTamanho();
-
-        int linhaAlvo = 0;
-        int colunaAlvo = 0;
         boolean errou = false;
 
-        // Varre o tabuleiro e procura uma célula não atacada
         do {
-
-            linhaAlvo = random.nextInt(tamanho);
-            colunaAlvo = random.nextInt(tamanho);
-
+            // Strategy: a decisão de onde atacar é delegada para a estratégia atual
+            int[] alvo = estrategiaDeAtaque.calcularPosicaoDeAtaque(tabJogador);
+            int linhaAlvo = alvo[0];
+            int colunaAlvo = alvo[1];
             System.out.printf("[MÁQUINA ATACOU] -> [%d, %d]\n", linhaAlvo, colunaAlvo);
 
             Resultado resultadoAI = jogo.atacar(linhaAlvo, colunaAlvo);
@@ -360,6 +365,9 @@ public class GameController {
     }
 
     private void finalizarJogo() {
+        jogo.setEstado(new EstadoFinalizado());
+        jogo.finalizarJogo();
+
         long duracaoSegundos = jogo.getDuracao();
         
         // Verifica quem venceu para determinar o nome do vencedor no objeto Pontuacao
