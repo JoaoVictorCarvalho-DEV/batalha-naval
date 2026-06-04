@@ -2,7 +2,7 @@ package model.observer;
 
 import java.util.List;
 import java.util.ArrayList;
-
+import model.uteis.Evento;
 public class EventManager {
     private List<GameObserver> observers = new ArrayList<>();
 
@@ -14,9 +14,9 @@ public class EventManager {
         observers.remove(observer);
     }
 
-    public void notifyObservers(String mensagem) {
+    public void notifyObservers(Evento evento) {
         for (GameObserver observer : observers) {
-            observer.update(mensagem);
+            observer.update(evento);
         }
     }
 

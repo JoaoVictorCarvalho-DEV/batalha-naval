@@ -1,5 +1,6 @@
 package model.observer;
+import model.uteis.Evento;
 
 public interface GameObserver {
-    void update(String mensagem);
+    void update(Evento evento);
 }

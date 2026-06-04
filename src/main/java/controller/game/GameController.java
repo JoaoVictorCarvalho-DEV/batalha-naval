@@ -44,7 +44,7 @@ public class GameController {
     public void initialize() {
         jogo = Session.getInstance().getJogoAtual();
         tempoInicio = System.currentTimeMillis();
-        
+
         eventManager = new EventManager();
         eventManager.addObserver(labelInstrucoes);
 
@@ -97,8 +97,10 @@ public class GameController {
             String direcao = obterTextoOrientacaoAmigavel();
 
             eventManager.notifyObservers(
-                    String.format("FASE DE POSICIONAMENTO | Navio: %s | Orientação: %s [Pressione 'R' para Girar]",
-                            nomeNavio, direcao));
+                    new Evento(TipoEvento.INFO,
+                            String.format(
+                                    "FASE DE POSICIONAMENTO | Navio: %s | Orientação: %s [Pressione 'R' para Girar]",
+                                    nomeNavio, direcao)));
         }
     }
 
@@ -131,7 +133,7 @@ public class GameController {
             Posicao posAlvo = jogo.getOponente().getTabuleiro().getPosicao(new Posicao(row, col));
 
             if (posAlvo.jaFoiAtacada()) {
-                eventManager.notifyObservers("Você já atacou essa célula! Escolha outra.");
+                eventManager.notifyObservers(new Evento(TipoEvento.INFO, "Você já atacou essa célula! Escolha outra."));
                 return;
             }
 
@@ -139,7 +141,8 @@ public class GameController {
             atualizarCelula(cell, resultado);
 
             if (jogo.getOponente().getTabuleiro().todasEmbarcacoesDestruidas()) {
-                eventManager.notifyObservers("VITÓRIA! Você destruiu toda a frota inimiga!");
+                eventManager.notifyObservers(
+                        new Evento(TipoEvento.VITORIA, "VITÓRIA! Você destruiu toda a frota inimiga!"));
                 enemyBoard.setDisable(true); // Freeze interface
                 finalizarJogo();
                 return;
@@ -147,9 +150,9 @@ public class GameController {
 
             if (resultado == Resultado.ERROU) {
                 executarTurnoDaMaquina();
-                eventManager.notifyObservers("Máquina atacou.");
+                eventManager.notifyObservers(new Evento(TipoEvento.INFO, "Máquina atacou."));
             } else {
-                eventManager.notifyObservers("Acertou! Ataque novamente");
+                eventManager.notifyObservers(new Evento(TipoEvento.ACERTO, "Acertou! Ataque novamente!"));
             }
         }
     }
@@ -190,8 +193,12 @@ public class GameController {
                 } else {
                     System.out.println("Todos os navios posicionados! Fase de combate iniciada.");
                     faseDePosicionamento = false;
-                    eventManager.notifyObservers("FASE DE COMBATE! Sua vez de atacar: Escolha uma célula no tabuleiro inimigo.");
-                    /* labelInstrucoes.setStyle("-fx-text-fill: #c0392b; -fx-font-weight: bold;"); */
+                    eventManager.notifyObservers(
+                            new Evento(TipoEvento.INFO,
+                                    "FASE DE COMBATE! Sua vez de atacar: Escolha uma célula no tabuleiro inimigo."));
+                    /*
+                     * labelInstrucoes.setStyle("-fx-text-fill: #c0392b; -fx-font-weight: bold;");
+                     */
                 }
             }
         }
@@ -229,25 +236,10 @@ public class GameController {
 
         int linhaAlvo = 0;
         int colunaAlvo = 0;
-        boolean coordenadaValidaFound = false;
         boolean errou = false;
 
         // Varre o tabuleiro e procura uma célula não atacada
         do {
-            /*
-             * //RETIRADO: POIS COM A LÓGICA DE APENAS TROCAR SE A MÁQUINA ERROU, ESSA PARTE
-             * É DESNECESSÁRIA
-             * do {
-             * linhaAlvo = random.nextInt(tamanho);
-             * colunaAlvo = random.nextInt(tamanho);
-             * 
-             * Posicao posVerificacao = tabJogador.getPosicao(new Posicao(linhaAlvo,
-             * colunaAlvo));
-             * if (!posVerificacao.jaFoiAtacada()) {
-             * coordenadaValidaFound = true;
-             * }
-             * } while (!coordenadaValidaFound);
-             */
 
             linhaAlvo = random.nextInt(tamanho);
             colunaAlvo = random.nextInt(tamanho);
@@ -267,7 +259,8 @@ public class GameController {
             }
 
             if (tabJogador.todasEmbarcacoesDestruidas()) {
-                eventManager.notifyObservers("DERROTA! A Máquina destruiu todas as suas embarcações.");
+                eventManager.notifyObservers(
+                        new Evento(TipoEvento.DERROTA, "DERROTA! A Máquina destruiu todas as suas embarcações."));
                 enemyBoard.setDisable(true);
                 finalizarJogo();
             }
