@@ -118,4 +118,9 @@ public class Tabuleiro {
     public int getTamanho(){
         return this.tamanho;
     }
+
+    public void resetarPosicao(int linha, int coluna) {
+        // Se o seu tabuleiro usa uma matriz bidimensional:
+        this.matrizPosicao[linha][coluna] = new Posicao(linha, coluna);
+    }
 }

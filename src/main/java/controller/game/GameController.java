@@ -23,6 +23,9 @@ import repository.PontuacaoRepository;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import java.util.Random;
+import controller.game.command.AcaoCommand;
+import controller.game.command.AtacarCommand;
+import java.util.Stack;
 
 
 public class GameController {
@@ -47,6 +50,7 @@ public class GameController {
     private PontuacaoRepository pontuacaoRepository = new PontuacaoRepository(Database.getInstance().getConnection());
 
     private final Random random = new Random();
+    private final Stack<AcaoCommand> historicoComandos = new Stack<>();
 
     @FXML
     public void initialize() {
@@ -131,11 +135,10 @@ public class GameController {
         handleCombate(cell, row, col, isPlayerGrid);
     }
 
+    // =======================================================================
+    // FASE DE COMBATE: TURNO DO JOGADOR 1
+    // =======================================================================
     private void handleCombate(Button cell, int row, int col, boolean isPlayerGrid) {
-        // =======================================================================
-        // FASE DE COMBATE: TURNO DO JOGADOR 1
-        // =======================================================================
-
         if (!isPlayerGrid) {
             Posicao posAlvo = jogo.getOponente().getTabuleiro().getPosicao(new Posicao(row, col));
 
@@ -144,8 +147,14 @@ public class GameController {
                 return;
             }
 
-            Resultado resultado = jogo.atacar(row, col);
-            atualizarCelula(cell, resultado);
+           // Instancia o comando encapsulando a intenção do clique
+            AtacarCommand comandoAtaque = new AtacarCommand(jogo, row, col, cell);
+
+            // Executa o comando
+            comandoAtaque.executar();
+
+            // Guarda no histórico para permitir desfazer futuramente
+            historicoComandos.push(comandoAtaque);
 
             if (jogo.getOponente().getTabuleiro().todasEmbarcacoesDestruidas()) {
                 eventManager.notifyObservers(
@@ -155,7 +164,7 @@ public class GameController {
                 return;
             }
 
-            if (resultado == Resultado.ERROU) {
+            if (comandoAtaque.getResultadoObtido() == Resultado.ERROU) {
                 executarTurnoDaMaquina();
                 eventManager.notifyObservers(new Evento(TipoEvento.INFO, "Máquina atacou."));
             } else {
