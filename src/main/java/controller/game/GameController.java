@@ -14,8 +14,8 @@ import model.observer.EventManager;
 import model.state.EstadoFinalizado;
 import model.state.EstadoPartida;
 import model.state.EstadoPosicionamento;
-import model.state.EstadoPreJogo;
 import model.strategy.AtaqueAleatorio;
+import model.strategy.AtaqueInteligente;
 import model.strategy.EstrategiaDeAtaque;
 import model.uteis.*;
 import components.StatusLabel;
@@ -34,7 +34,7 @@ public class GameController {
     private EventManager eventManager;
 
     private Jogo jogo;
-    private final EstrategiaDeAtaque estrategiaDeAtaque = new AtaqueAleatorio();
+    private final EstrategiaDeAtaque estrategiaDeAtaque = new AtaqueInteligente();
 
     // Variáveis para rastrear posicionamento;
     private boolean faseDePosicionamento = true;
@@ -60,7 +60,6 @@ public class GameController {
                 new Cruzador(),
                 new Encouracado(),
                 new PortaAvioes(),
-
                 new Submarino()
         };
 
@@ -237,8 +236,8 @@ public class GameController {
 
     // Ataque do jogador 2 (Máquina)
     private void executarTurnoDaMaquina() {
-        Tabuleiro tabJogador = jogo.getJogadorAtual().getTabuleiro();
-        boolean errou = false;
+        Tabuleiro tabJogador = jogo.getOponente().getTabuleiro();
+        Resultado resultadoAI;
 
         do {
             // Strategy: a decisão de onde atacar é delegada para a estratégia atual
@@ -247,11 +246,7 @@ public class GameController {
             int colunaAlvo = alvo[1];
             System.out.printf("[MÁQUINA ATACOU] -> [%d, %d]\n", linhaAlvo, colunaAlvo);
 
-            Resultado resultadoAI = jogo.atacar(linhaAlvo, colunaAlvo);
-
-            if (resultadoAI == Resultado.ERROU) {
-                errou = true;
-            }
+            resultadoAI = jogo.atacar(linhaAlvo, colunaAlvo);
 
             // Atualiza UI
             Button botaoJogador = obterBotaoNoGrid(playerBoard, linhaAlvo, colunaAlvo);
@@ -264,10 +259,10 @@ public class GameController {
                         new Evento(TipoEvento.DERROTA, "DERROTA! A Máquina destruiu todas as suas embarcações."));
                 enemyBoard.setDisable(true);
                 finalizarJogo();
+                return;
             }
 
-        } while (!errou);
-
+        } while (resultadoAI == Resultado.ACERTOU || resultadoAI == Resultado.AFUNDOU);
     }
 
     // Método que pega a exata instancia do botão para ser manipulada durante o jogo
