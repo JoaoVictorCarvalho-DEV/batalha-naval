@@ -186,7 +186,7 @@ public class GameController {
             if (sucesso) {
                 renderizarNavioNoGrid(grid, navioParaPosicionar, row, col, orientacaoAtual);
 
-// =======================================================================
+                // =======================================================================
                 // LÓGICA DE POSICIONAMENTO ASSÍMETRICO E INTELIGENTE: JOGADOR 2 (MÁQUINA)
                 // =======================================================================
                 jogo.alternarJogador();
