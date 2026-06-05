@@ -253,7 +253,7 @@ public class GameController {
         Task<Void> turnoMaquinaTask = new Task<>() {
             @Override
             protected Void call() throws Exception {
-                Tabuleiro tabJogador = jogo.getJogadorAtual().getTabuleiro();
+                Tabuleiro tabJogador = jogo.getOponente().getTabuleiro();
                 boolean errou = false;
 
                 do {
