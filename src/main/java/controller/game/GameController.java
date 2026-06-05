@@ -1,7 +1,6 @@
 package controller.game;
 
 import java.time.LocalDateTime;
-
 import app.Main;
 import app.Session;
 import database.Database;
@@ -21,6 +20,13 @@ import model.uteis.*;
 import components.StatusLabel;
 import javafx.scene.Node;
 import repository.PontuacaoRepository;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
+import java.util.Random;
+import controller.game.command.AcaoCommand;
+import controller.game.command.AtacarCommand;
+import java.util.Stack;
+
 
 public class GameController {
 
@@ -43,6 +49,8 @@ public class GameController {
     private Orientacao orientacaoAtual = Orientacao.HORIZONTAL; // Horientação padrão
     private PontuacaoRepository pontuacaoRepository = new PontuacaoRepository(Database.getInstance().getConnection());
 
+    private final Random random = new Random();
+    private final Stack<AcaoCommand> historicoComandos = new Stack<>();
 
     @FXML
     public void initialize() {
@@ -54,15 +62,12 @@ public class GameController {
         eventManager = new EventManager();
         eventManager.addObserver(labelInstrucoes);
 
-        // Sequência de posicionamento
-        sequenciaDeNavios = new Embarcacao[] {
-
-                new Cruzador(),
-                new Encouracado(),
-                new PortaAvioes(),
-
-                new Submarino()
-        };
+        // Sequência de posicionamento + chamada para o Factory de embarcações.
+        String[] tiposDeNavios = {"Cruzador", "Encouracado", "PortaAvioes", "Submarino"};
+        sequenciaDeNavios = new Embarcacao[tiposDeNavios.length];
+        for (int i = 0; i < tiposDeNavios.length; i++) {
+            sequenciaDeNavios[i] = EmbarcacaoFactory.criar(tiposDeNavios[i]);
+        }
 
         // Iniciando tabuleiros e jogadores
         System.out.println("Iniciando jogador:" + jogo.getJogadorAtual().getNome());
@@ -91,7 +96,6 @@ public class GameController {
                 }
             }
         });
-
         playerBoard.setFocusTraversable(true);
         playerBoard.requestFocus();
     }
@@ -131,11 +135,10 @@ public class GameController {
         handleCombate(cell, row, col, isPlayerGrid);
     }
 
+    // =======================================================================
+    // FASE DE COMBATE: TURNO DO JOGADOR 1
+    // =======================================================================
     private void handleCombate(Button cell, int row, int col, boolean isPlayerGrid) {
-        // =======================================================================
-        // FASE DE COMBATE: TURNO DO JOGADOR 1
-        // =======================================================================
-
         if (!isPlayerGrid) {
             Posicao posAlvo = jogo.getOponente().getTabuleiro().getPosicao(new Posicao(row, col));
 
@@ -144,8 +147,14 @@ public class GameController {
                 return;
             }
 
-            Resultado resultado = jogo.atacar(row, col);
-            atualizarCelula(cell, resultado);
+           // Instancia o comando encapsulando a intenção do clique
+            AtacarCommand comandoAtaque = new AtacarCommand(jogo, row, col, cell);
+
+            // Executa o comando
+            comandoAtaque.executar();
+
+            // Guarda no histórico para permitir desfazer futuramente
+            historicoComandos.push(comandoAtaque);
 
             if (jogo.getOponente().getTabuleiro().todasEmbarcacoesDestruidas()) {
                 eventManager.notifyObservers(
@@ -155,7 +164,7 @@ public class GameController {
                 return;
             }
 
-            if (resultado == Resultado.ERROU) {
+            if (comandoAtaque.getResultadoObtido() == Resultado.ERROU) {
                 executarTurnoDaMaquina();
                 eventManager.notifyObservers(new Evento(TipoEvento.INFO, "Máquina atacou."));
             } else {
@@ -181,9 +190,9 @@ public class GameController {
 
                 jogo.alternarJogador();
                 Tabuleiro tabJogador2 = jogo.getJogadorAtual().getTabuleiro();
-                // Instancia um novo navio do mesmo tipo para evitar referências duplicadas na
-                // memória
-                Embarcacao navioEspelho = clonarNavioParaTeste(navioParaPosicionar);
+
+                // Chama o Factory Method para instanciar o navio espelho
+                Embarcacao navioEspelho = EmbarcacaoFactory.criar(navioParaPosicionar.getNome());
                 boolean sucessoEspelho = tabJogador2.posicionarEmbarcacao(navioEspelho, row, col,
                         orientacaoAtual);
                 System.out.println("[TESTE] Espelhando " + navioEspelho.getNome() + " no Player 2: "
@@ -237,37 +246,67 @@ public class GameController {
 
     // Ataque do jogador 2 (Máquina)
     private void executarTurnoDaMaquina() {
-        Tabuleiro tabJogador = jogo.getJogadorAtual().getTabuleiro();
-        boolean errou = false;
+        // Bloqueia o tabuleiro inimigo para o jogador não clicar enquanto a máquina joga
+        enemyBoard.setDisable(true);
 
-        do {
-            // Strategy: a decisão de onde atacar é delegada para a estratégia atual
-            int[] alvo = estrategiaDeAtaque.calcularPosicaoDeAtaque(tabJogador);
-            int linhaAlvo = alvo[0];
-            int colunaAlvo = alvo[1];
-            System.out.printf("[MÁQUINA ATACOU] -> [%d, %d]\n", linhaAlvo, colunaAlvo);
+        // Criamos uma tarefa em background para rodar o loop com delay de forma assíncrona
+        Task<Void> turnoMaquinaTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                Tabuleiro tabJogador = jogo.getJogadorAtual().getTabuleiro();
+                boolean errou = false;
 
-            Resultado resultadoAI = jogo.atacar(linhaAlvo, colunaAlvo);
+                do {
+                    // 1. Gera o delay aleatório no range de 2 segundos (ex: entre 400ms e 2000ms)
+                    long delayMs = 500 + (long) (random.nextDouble() * 2500);
+                    Thread.sleep(delayMs);
 
-            if (resultadoAI == Resultado.ERROU) {
-                errou = true;
+                    // 2. Processa a lógica de ataque naEngine/Model
+                    int[] alvo = estrategiaDeAtaque.calcularPosicaoDeAtaque(tabJogador);
+                    int linhaAlvo = alvo[0];
+                    int colunaAlvo = alvo[1];
+
+                    Resultado resultadoAI = jogo.atacar(linhaAlvo, colunaAlvo);
+                    System.out.printf("[MÁQUINA ATACOU] -> [%d, %d] - %s\n", linhaAlvo, colunaAlvo, resultadoAI);
+
+                    if (resultadoAI == Resultado.ERROU) {
+                        errou = true;
+                    }
+
+                    // 3. Modificações na Interface Gráfica (UI) precisam rodar dentro do Platform.runLater
+                    Platform.runLater(() -> {
+                        // Atualiza a célula atingida na tela
+                        Button botaoJogador = obterBotaoNoGrid(playerBoard, linhaAlvo, colunaAlvo);
+                        if (botaoJogador != null) {
+                            atualizarCelula(botaoJogador, resultadoAI);
+                        }
+
+                        // Verifica fim de jogo
+                        if (tabJogador.todasEmbarcacoesDestruidas()) {
+                            eventManager.notifyObservers(
+                                    new Evento(TipoEvento.DERROTA, "DERROTA! A Máquina destruiu todas as suas embarcações."));
+                            enemyBoard.setDisable(true);
+                            finalizarJogo();
+                        }
+                    });
+
+                } while (!errou && !tabJogador.todasEmbarcacoesDestruidas());
+
+                // 4. Quando o loop terminar (máquina errar), libera o tabuleiro para o jogador na UI Thread
+                Platform.runLater(() -> {
+                    if (!tabJogador.todasEmbarcacoesDestruidas()) {
+                        enemyBoard.setDisable(false);
+                    }
+                });
+
+                return null;
             }
+        };
 
-            // Atualiza UI
-            Button botaoJogador = obterBotaoNoGrid(playerBoard, linhaAlvo, colunaAlvo);
-            if (botaoJogador != null) {
-                atualizarCelula(botaoJogador, resultadoAI);
-            }
-
-            if (tabJogador.todasEmbarcacoesDestruidas()) {
-                eventManager.notifyObservers(
-                        new Evento(TipoEvento.DERROTA, "DERROTA! A Máquina destruiu todas as suas embarcações."));
-                enemyBoard.setDisable(true);
-                finalizarJogo();
-            }
-
-        } while (!errou);
-
+        // Inicializa a Thread em background para executar a Task
+        Thread thread = new Thread(turnoMaquinaTask);
+        thread.setDaemon(true); // Garante que a thread feche se a aplicação for encerrada
+        thread.start();
     }
 
     // Método que pega a exata instancia do botão para ser manipulada durante o jogo
@@ -324,18 +363,6 @@ public class GameController {
                 }
             }
         }
-    }
-
-    // Factory method auxiliar para clonar a instância limpa do navio durante o loop
-    // de testes
-    private Embarcacao clonarNavioParaTeste(Embarcacao navio) {
-        if (navio instanceof Cruzador)
-            return new Cruzador();
-        if (navio instanceof Encouracado)
-            return new Encouracado();
-        if (navio instanceof PortaAvioes)
-            return new PortaAvioes();
-        return new Submarino();
     }
 
     public void setEnemyBoard(GridPane enemyBoard) {
