@@ -71,4 +71,10 @@ public class Jogador {
     public Tabuleiro getTabuleiro() {
         return tabuleiro;
     }
+
+    public void decrementarTiros() {
+        if (this.tiros > 0) {
+            this.tiros--;
+        }
+    }
 }
