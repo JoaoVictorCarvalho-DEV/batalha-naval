@@ -1,21 +1,80 @@
-# Projeto Batalha Naval - Padroes de Projeto GoF
+## Padrões de Projeto
 
-Este projeto e uma implementacao do classico jogo Batalha Naval desenvolvida em Java e JavaFX. O principal objetivo e desafio arquitetural deste sistema foi integrar **6 Padroes de Projeto GoF (Gang of Four)** em uma unica base de codigo cooperativa, garantindo alta coesao, baixo acoplamento e respeito estrito aos principios SOLID.
+### Strategy — Estratégia de ataque da máquina
+
+**Problema que resolve**
+
+A lógica de escolha dos ataques da IA estava concentrada no `GameController`, gerando acoplamento e dificultando a evolução do comportamento da máquina.
+
+**Como foi aplicado**
+
+A responsabilidade de decidir onde atacar foi extraída para a interface `EstrategiaDeAtaque`. O `GameController` apenas solicita uma posição de ataque e executa o disparo.
+
+Atualmente existe uma única estratégia adaptativa:
+
+```text
+EstrategiaDeAtaque (interface)
+└── AtaqueInteligente
+```
+
+O `AtaqueInteligente` inicia realizando ataques aleatórios e, ao acertar um navio, passa a atacar as posições vizinhas até encontrar toda a embarcação. Quando o navio é afundado, a estratégia retorna ao modo de busca normal.
+
+**Onde está no código**
+
+| Arquivo                                  | Papel                                                       |
+| ---------------------------------------- | ----------------------------------------------------------- |
+| `model/strategy/EstrategiaDeAtaque.java` | Interface com o contrato `calcularPosicaoDeAtaque()`        |
+| `model/strategy/AtaqueInteligente.java`  | Implementação da IA adaptativa                              |
+| `controller/game/GameController.java`    | Utiliza a estratégia para obter a próxima posição de ataque |
+
+**Benefício**
+
+O controlador não precisa conhecer a lógica da IA. Novas estratégias podem ser adicionadas futuramente sem alterar o fluxo principal do jogo.
+
+```java
+private final EstrategiaDeAtaque estrategiaDeAtaque = new AtaqueInteligente();
+```
 
 ---
 
-## Como o Projeto Funciona
+### State — Fases do jogo
 
-O sistema adota uma arquitetura em camadas estruturada para separar a Interface Grafica (UI) das Regras de Negocio (Dominio) e da Persistencia:
+**Problema que resolve**
 
-1. **Inicializacao e Estado:** O jogo e controlado por uma maquina de estados que dita se o sistema esta na fase de configuracao, combate ou finalizacao.
-2. **Fase de Posicionamento:** O Jogador 1 posiciona sua frota clicando no tabuleiro visual. O sistema utiliza fabricas para instanciar os navios correspondentes e processa uma busca adaptativa para posicionar a frota do Jogador 2 (Maquina) de forma assimetrica e oculta.
-3. **Fase de Combate:** Os jogadores alternam turnos realizando disparos. Os cliques do jogador humano sao convertidos em objetos autonomos de acao, enquanto os disparos da maquina sao gerenciados por threads de background nao-bloqueantes com delays assincronos para simular o tempo de resposta humano.
-4. **Finalizacao e Persistencia:** Ao detectar que todas as embarcacoes de um tabuleiro foram destruidas, o jogo calcula as estatisticas de tempo e pontuacao, persiste os dados no banco de dados atraves de repositorios e varre a memoria para expor a auditoria completa da partida.
+O controle das fases do jogo era realizado por verificações simples, o que tende a gerar código difícil de manter conforme novas funcionalidades são adicionadas.
 
----
+**Como foi aplicado**
 
-## Implementacao dos Padroes de Projeto Destacados
+Cada fase do jogo passou a ser representada por uma classe de estado. O objeto `Jogo` mantém o estado atual e controla as transições entre as etapas da partida.
+
+```text
+EstadoPreJogo → EstadoPosicionamento → EstadoPartida → EstadoFinalizado
+```
+
+As mudanças de estado são registradas no console:
+
+```text
+[State] Transicao: PRE_JOGO → POSICIONAMENTO
+[State] Transicao: POSICIONAMENTO → PARTIDA
+[State] Transicao: PARTIDA → FINALIZADO
+```
+
+**Onde está no código**
+
+| Arquivo                                 | Papel                                        |
+| --------------------------------------- | -------------------------------------------- |
+| `model/state/EstadoJogo.java`           | Interface base dos estados                   |
+| `model/state/EstadoPreJogo.java`        | Estado inicial                               |
+| `model/state/EstadoPosicionamento.java` | Fase de posicionamento dos navios            |
+| `model/state/EstadoPartida.java`        | Fase de combate                              |
+| `model/state/EstadoFinalizado.java`     | Estado final do jogo                         |
+| `model/uteis/Jogo.java`                 | Armazena o estado atual e realiza transições |
+| `controller/game/GameController.java`   | Solicita as mudanças de estado               |
+
+**Benefício**
+
+As regras de cada fase ficam organizadas e separadas. Caso seja necessário adicionar novos estados no futuro, basta criar uma nova implementação de `EstadoJogo` e integrá-la ao fluxo da partida.
+
 
 ### 1. Padrao Comportamental: Command
 
