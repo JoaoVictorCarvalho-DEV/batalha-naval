@@ -1,7 +1,6 @@
 package controller.game;
 
 import java.time.LocalDateTime;
-
 import app.Main;
 import app.Session;
 import database.Database;
@@ -61,11 +60,9 @@ public class GameController {
 
         // Sequência de posicionamento
         sequenciaDeNavios = new Embarcacao[] {
-
                 new Cruzador(),
                 new Encouracado(),
                 new PortaAvioes(),
-
                 new Submarino()
         };
 
@@ -96,7 +93,6 @@ public class GameController {
                 }
             }
         });
-
         playerBoard.setFocusTraversable(true);
         playerBoard.requestFocus();
     }
@@ -186,9 +182,9 @@ public class GameController {
 
                 jogo.alternarJogador();
                 Tabuleiro tabJogador2 = jogo.getJogadorAtual().getTabuleiro();
-                // Instancia um novo navio do mesmo tipo para evitar referências duplicadas na
-                // memória
-                Embarcacao navioEspelho = clonarNavioParaTeste(navioParaPosicionar);
+
+                // Chama o Factory Method para instanciar o navio espelho
+                Embarcacao navioEspelho = EmbarcacaoFactory.criar(navioParaPosicionar.getNome());
                 boolean sucessoEspelho = tabJogador2.posicionarEmbarcacao(navioEspelho, row, col,
                         orientacaoAtual);
                 System.out.println("[TESTE] Espelhando " + navioEspelho.getNome() + " no Player 2: "
@@ -254,7 +250,7 @@ public class GameController {
 
                 do {
                     // 1. Gera o delay aleatório no range de 2 segundos (ex: entre 400ms e 2000ms)
-                    long delayMs = 400 + (long) (random.nextDouble() * 1600);
+                    long delayMs = 500 + (long) (random.nextDouble() * 2500);
                     Thread.sleep(delayMs);
 
                     // 2. Processa a lógica de ataque naEngine/Model
@@ -359,18 +355,6 @@ public class GameController {
                 }
             }
         }
-    }
-
-    // Factory method auxiliar para clonar a instância limpa do navio durante o loop
-    // de testes
-    private Embarcacao clonarNavioParaTeste(Embarcacao navio) {
-        if (navio instanceof Cruzador)
-            return new Cruzador();
-        if (navio instanceof Encouracado)
-            return new Encouracado();
-        if (navio instanceof PortaAvioes)
-            return new PortaAvioes();
-        return new Submarino();
     }
 
     public void setEnemyBoard(GridPane enemyBoard) {
