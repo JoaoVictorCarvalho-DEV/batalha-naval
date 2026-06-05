@@ -187,21 +187,59 @@ public class GameController {
                 renderizarNavioNoGrid(grid, navioParaPosicionar, row, col, orientacaoAtual);
 
                 // =======================================================================
-                // LOGICA DE TESTE: Espelha o navio idêntico no Tabuleiro do Jogador 2
+                // LÓGICA DE POSICIONAMENTO ASSÍMETRICO E INTELIGENTE: JOGADOR 2 (MÁQUINA)
                 // =======================================================================
-
                 jogo.alternarJogador();
                 Tabuleiro tabJogador2 = jogo.getJogadorAtual().getTabuleiro();
-
-                // Chama o Factory Method para instanciar o navio espelho
                 Embarcacao navioEspelho = EmbarcacaoFactory.criar(navioParaPosicionar.getNome());
-                boolean sucessoEspelho = tabJogador2.posicionarEmbarcacao(navioEspelho, row, col,
-                        orientacaoAtual);
-                System.out.println("[TESTE] Espelhando " + navioEspelho.getNome() + " no Player 2: "
-                        + (sucessoEspelho ? "Sucesso" : "Falha"));
+
+                boolean sucessoEspelho = false;
+
+                // Definição dos deslocamentos que tentaremos aplicar em relação à jogada do Player 1
+                // Tentamos mover o navio levemente para não expor na mesma posição geográfica
+                int[] modificadoresLinha =  { 0, +1, -1,  0, +2, -2 };
+                int[] modificadoresColuna = { +1, 0,  0, -1, +1, -2 };
+                Orientacao[] orientacoesPossiveis = Orientacao.values();
+
+                // Busca linear adaptativa: tenta encontrar uma região livre e válida nas proximidades
+                for (int i = 0; i < modificadoresLinha.length && !sucessoEspelho; i++) {
+                    int novaLinha = row + modificadoresLinha[i];
+                    int novaColuna = col + modificadoresColuna[i];
+
+                    // Varre as orientações disponíveis silenciosamente para garantir o encaixe dentro das barreiras
+                    for (Orientacao orientacaoTeste : orientacoesPossiveis) {
+
+                        // Validação preventiva de limites do tabuleiro para evitar index out of bounds
+                        if (novaLinha >= 0 && novaLinha < tabJogador2.getTamanho() &&
+                                novaColuna >= 0 && novaColuna < tabJogador2.getTamanho()) {
+
+                            sucessoEspelho = tabJogador2.posicionarEmbarcacao(navioEspelho, novaLinha, novaColuna, orientacaoTeste);
+
+                            if (sucessoEspelho) {
+                                System.out.printf("[AI POSICIONAMENTO] %s posicionado assimetricamente em [%d, %d] com orientacao %s\n",
+                                        navioEspelho.getNome(), novaLinha, novaColuna, orientacaoTeste.name());
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Fallback de Segurança Crítica: Caso todas as vizinhanças falhem por alta densidade de navios,
+                // força uma busca randômica pura no tabuleiro até encontrar um quadrante vago (Garante que o jogo não trave)
+                while (!sucessoEspelho) {
+                    int randL = random.nextInt(tabJogador2.getTamanho());
+                    int randC = random.nextInt(tabJogador2.getTamanho());
+                    Orientacao randO = orientacoesPossiveis[random.nextInt(orientacoesPossiveis.length)];
+
+                    sucessoEspelho = tabJogador2.posicionarEmbarcacao(navioEspelho, randL, randC, randO);
+                    if (sucessoEspelho) {
+                        System.out.printf("[AI POSICIONAMENTO FALLBACK] %s posicionado aleatoriamente em [%d, %d]\n",
+                                navioEspelho.getNome(), randL, randC);
+                    }
+                }
+
                 jogo.alternarJogador();
                 indiceNavioAtual++;
-
                 // =======================================================================
 
                 if (indiceNavioAtual < sequenciaDeNavios.length) {
@@ -435,6 +473,8 @@ public class GameController {
             mostrarMensagem("Erro ao salvar pontuação!", Alert.AlertType.ERROR);
         }
 
+        gerarRelatorioCronologico();
+
         Main.changeScreen("pos-game.fxml");
     }
 
@@ -444,5 +484,40 @@ public class GameController {
         alert.setHeaderText(null);
         alert.setContentText(mensagem);
         alert.showAndWait();
+    }
+
+    private void gerarRelatorioCronologico() {
+        System.out.println("\n==================================================");
+        System.out.println("      RELATÓRIO CRONOLÓGICO DA PARTIDA (LOG)      ");
+        System.out.println("==================================================");
+
+        if (historicoComandos.isEmpty()) {
+            System.out.println("Nenhuma ação de combate foi registrada.");
+            System.out.println("==================================================");
+            return;
+        }
+
+        int turno = 1;
+        // Iterar diretamente sobre a Stack processa os elementos na ordem cronológica de inserção (FIFO)
+        for (AcaoCommand comando : historicoComandos) {
+            if (comando instanceof AtacarCommand) {
+                AtacarCommand ataque = (AtacarCommand) comando;
+
+                int exibidLinha = ataque.getLinha();
+                int exibidColuna = ataque.getColuna();
+                Resultado res = ataque.getResultadoObtido();
+
+                // Tradução amigável do Enum Resultado
+                String resultadoTexto = (res == Resultado.ACERTOU) ? "FOGO (Acertou)" : "ÁGUA (Errou)";
+
+                System.out.printf("Jogada #%02d | Coordenadas: Alvo [%d, %d] -> Resultado: %s\n",
+                        turno++,
+                        exibidLinha,
+                        exibidColuna,
+                        resultadoTexto
+                );
+            }
+        }
+        System.out.println("==================================================\n");
     }
 }

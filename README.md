@@ -74,3 +74,16 @@ As mudanças de estado são registradas no console:
 **Benefício**
 
 As regras de cada fase ficam organizadas e separadas. Caso seja necessário adicionar novos estados no futuro, basta criar uma nova implementação de `EstadoJogo` e integrá-la ao fluxo da partida.
+
+### 1. Padrao Comportamental: Command
+
+* **Arquivo Principal:** `src/main/java/controller/game/command/AtacarCommand.java`
+* **Como e Utilizado:** Toda intencao de disparo no tabuleiro inimigo e encapsulada dentro de um objeto `AtacarCommand`. Em vez de o controlador da tela executar o ataque diretamente, ele cria uma instancia deste comando (passando as coordenadas e referencias do botao clicado) e dispara o metodo `.executar()`.
+* **Geracao do Relatorio Final:** Cada comando executado com sucesso e armazenado em uma pilha historica (`Stack<AcaoCommand>`) mantida no controlador central. No final da partida, o metodo `finalizarJogo()` invoca uma varredura sequencial nesta pilha. Como cada objeto `AtacarCommand` retem internamente as coordenadas do tiro e o enumerador do resultado obtido, o sistema reconstroi a cronologia exata turn-by-turn do combate, gerando o relatorio estatistico no terminal sem a necessidade de criar variaveis de log paralelas na camada de modelo.
+
+### 2. Padrao Criacional: Factory Method
+
+* **Arquivo Principal:** `src/main/java/model/embarcacoes/EmbarcacaoFactory.java`
+* **Como e Utilizado:** A fabrica elimina a necessidade do uso do operador `new` e de checagens dinamicas de tipo (`instanceof`) no controlador de interface, centralizando a criacao das subclasses de `Embarcacao` (como `Cruzador`, `Submarino`, etc.) atraves de um registro estatico de construtores.
+* **Instanciacao dos Navios dos Dois Jogadores:** * **Jogador 1:** Durante a fase de posicionamento, o laco de leitura percorre um catalogo de identificadores textuais (Strings) e invoca `EmbarcacaoFactory.criar(tipo)` para materializar as pecas que o usuario posicionara na tela.
+    * **Jogador 2 (Maquina):** Assim que o posicionamento do Jogador 1 e validado, o sistema aciona novamente a `EmbarcacaoFactory` passando o nome do navio recem-criado. Isso garante o nascimento de uma nova instancia inedita, isolada em memoria, para ser submetida ao algoritmo assimetrico de busca de coordenadas do oponente, mantendo a frota de ambos os jogadores homogenea na assinatura, mas heterogenea na disposicao geografica do tabuleiro.

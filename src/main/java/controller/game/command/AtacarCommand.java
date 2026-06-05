@@ -49,6 +49,14 @@ public class AtacarCommand implements AcaoCommand {
             jogo.getJogadorAtual().decrementarTiros();
         }
     }
+    public int getLinha() {
+        return this.linha;
+    }
+
+    public int getColuna() {
+        return this.coluna;
+    }
+
 
     public Resultado getResultadoObtido() {
         return this.resultadoObtido;
