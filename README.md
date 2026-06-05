@@ -75,7 +75,6 @@ As mudanças de estado são registradas no console:
 
 As regras de cada fase ficam organizadas e separadas. Caso seja necessário adicionar novos estados no futuro, basta criar uma nova implementação de `EstadoJogo` e integrá-la ao fluxo da partida.
 
-
 ### 1. Padrao Comportamental: Command
 
 * **Arquivo Principal:** `src/main/java/controller/game/command/AtacarCommand.java`
