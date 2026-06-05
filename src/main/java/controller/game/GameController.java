@@ -13,8 +13,8 @@ import model.observer.EventManager;
 import model.state.EstadoFinalizado;
 import model.state.EstadoPartida;
 import model.state.EstadoPosicionamento;
-import model.state.EstadoPreJogo;
 import model.strategy.AtaqueAleatorio;
+import model.strategy.AtaqueInteligente;
 import model.strategy.EstrategiaDeAtaque;
 import model.uteis.*;
 import components.StatusLabel;
@@ -40,7 +40,9 @@ public class GameController {
     private EventManager eventManager;
 
     private Jogo jogo;
-    private final EstrategiaDeAtaque estrategiaDeAtaque = new AtaqueAleatorio();
+    private final AtaqueAleatorio estrategiaAleatoria = new AtaqueAleatorio();
+    private final AtaqueInteligente estrategiaInteligente = new AtaqueInteligente();
+    private EstrategiaDeAtaque estrategiaDeAtaque = estrategiaAleatoria;
 
     // Variáveis para rastrear posicionamento;
     private boolean faseDePosicionamento = true;
@@ -246,14 +248,14 @@ public class GameController {
 
     // Ataque do jogador 2 (Máquina)
     private void executarTurnoDaMaquina() {
-        // Bloqueia o tabuleiro inimigo para o jogador não clicar enquanto a máquina joga
         enemyBoard.setDisable(true);
+        // Bloqueia o tabuleiro inimigo para o jogador não clicar enquanto a máquina joga
 
         // Criamos uma tarefa em background para rodar o loop com delay de forma assíncrona
         Task<Void> turnoMaquinaTask = new Task<>() {
             @Override
             protected Void call() throws Exception {
-                Tabuleiro tabJogador = jogo.getJogadorAtual().getTabuleiro();
+                Tabuleiro tabJogador = jogo.getOponente().getTabuleiro();
                 boolean errou = false;
 
                 do {
@@ -269,9 +271,19 @@ public class GameController {
                     Resultado resultadoAI = jogo.atacar(linhaAlvo, colunaAlvo);
                     System.out.printf("[MÁQUINA ATACOU] -> [%d, %d] - %s\n", linhaAlvo, colunaAlvo, resultadoAI);
 
-                    if (resultadoAI == Resultado.ERROU) {
+                    // Strategy: troca de estratégia conforme o resultado do ataque
+                    if (resultadoAI == Resultado.ACERTOU) {
+                        estrategiaInteligente.registrarAcerto(linhaAlvo, colunaAlvo);
+                        estrategiaDeAtaque = estrategiaInteligente; // acertou → persegue o navio
+                        System.out.println("[Strategy] Trocando para AtaqueInteligente");
+                    } else if (resultadoAI == Resultado.AFUNDOU) {
+                        estrategiaInteligente.resetarAlvo();
+                        estrategiaDeAtaque = estrategiaAleatoria; // afundou → volta ao aleatório
+                        System.out.println("[Strategy] Trocando para AtaqueAleatorio");
+                    } else if (resultadoAI == Resultado.ERROU) {
                         errou = true;
                     }
+
 
                     // 3. Modificações na Interface Gráfica (UI) precisam rodar dentro do Platform.runLater
                     Platform.runLater(() -> {
@@ -396,7 +408,7 @@ public class GameController {
         jogo.finalizarJogo();
 
         long duracaoSegundos = jogo.getDuracao();
-        
+
         // Verifica quem venceu para determinar o nome do vencedor no objeto Pontuacao
         String nomeVencedor;
         if (jogo.getOponente().getTabuleiro().todasEmbarcacoesDestruidas()) {
