@@ -58,13 +58,12 @@ public class GameController {
         eventManager = new EventManager();
         eventManager.addObserver(labelInstrucoes);
 
-        // Sequência de posicionamento
-        sequenciaDeNavios = new Embarcacao[] {
-                new Cruzador(),
-                new Encouracado(),
-                new PortaAvioes(),
-                new Submarino()
-        };
+        // Sequência de posicionamento + chamada para o Factory de embarcações.
+        String[] tiposDeNavios = {"Cruzador", "Encouracado", "PortaAvioes", "Submarino"};
+        sequenciaDeNavios = new Embarcacao[tiposDeNavios.length];
+        for (int i = 0; i < tiposDeNavios.length; i++) {
+            sequenciaDeNavios[i] = EmbarcacaoFactory.criar(tiposDeNavios[i]);
+        }
 
         // Iniciando tabuleiros e jogadores
         System.out.println("Iniciando jogador:" + jogo.getJogadorAtual().getNome());
