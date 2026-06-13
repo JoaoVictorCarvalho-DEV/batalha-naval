@@ -1,4 +1,25 @@
-## Padrões de Projeto
+## Como Executar o Projeto
+
+Este projeto utiliza o **Java 26** e o **JavaFX 22.0.1**, gerenciados via **Maven**. Para construir e rodar a aplicação a partir do código-fonte, siga as instruções abaixo.
+
+### Pré-requisitos
+
+Certifique-se de ter instalado em sua máquina:
+* **JDK 26** (configurado na variável de ambiente `JAVA_HOME`)
+* **Apache Maven** (disponível no `PATH` global do sistema)
+
+### Instruções para Execução
+
+1. Abra o terminal na raiz do projeto (onde o arquivo `pom.xml` está localizado).
+2. Execute o ciclo de limpeza do Maven seguido pelo plugin do JavaFX através do seguinte comando unificado:
+
+```bash
+mvn clean javafx:run
+```
+
+---
+
+## Detalhes dos padrões de projeto GoF utilizados
 
 ### Strategy — Estratégia de ataque da máquina
 
