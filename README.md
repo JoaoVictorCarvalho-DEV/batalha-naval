@@ -75,6 +75,82 @@ As mudanças de estado são registradas no console:
 
 As regras de cada fase ficam organizadas e separadas. Caso seja necessário adicionar novos estados no futuro, basta criar uma nova implementação de `EstadoJogo` e integrá-la ao fluxo da partida.
 
+---
+
+### Observer — Notificação de eventos do jogo
+
+**Problema que resolve**
+
+Durante o jogo, vários eventos ocorrem (ataques acertados, mensagens de erro, mudanças de turno) que precisam ser comunicados aos componentes visuais. Sem o padrão Observer, o `GameController` teria que conhecer e atualizar diretamente cada componente da interface, gerando acoplamento forte.
+
+**Como foi aplicado**
+
+O padrão Observer foi implementado através da interface `GameObserver` que define o contrato `update(Evento evento)`. O `EventManager` mantém uma lista de observadores e, quando um evento ocorre, notifica todos os registrados.
+
+```text
+GameObserver (interface)
+└── StatusLabel (implementação)
+
+EventManager (gerenciador central)
+└── Notifica todos os observadores registrados
+```
+
+O fluxo é simples: o `GameController` cria eventos (como `TipoEvento.INFO` ou `TipoEvento.ACERTO`) e os distribui através do `EventManager`, que chama o método `update()` em cada observador registrado.
+
+**Onde está no código**
+
+| Arquivo                                 | Papel                                                  |
+| --------------------------------------- | ------------------------------------------------------ |
+| `model/observer/GameObserver.java`      | Interface que define o contrato `update(Evento)`       |
+| `model/observer/EventManager.java`      | Gerenciador que adiciona, remove e notifica observers   |
+| `components/StatusLabel.java`           | Implementação de GameObserver para atualizar a UI       |
+| `controller/game/GameController.java`   | Cria eventos e solicita notificação aos observadores    |
+| `model/uteis/Evento.java`               | Objeto que encapsula informações do evento              |
+| `model/uteis/TipoEvento.java`           | Enumeração dos tipos de eventos (INFO, ACERTO, etc.)    |
+
+**Benefício**
+
+O `GameController` não precisa conhecer a implementação específica de cada componente visual. Novos observadores podem ser adicionados dinamicamente sem modificar o controlador. A comunicação entre lógica de jogo e interface fica desacoplada.
+
+---
+
+### Singleton — Instância única da sessão
+
+**Problema que resolve**
+
+A aplicação precisa de um ponto de acesso global e único para gerenciar a sessão atual do jogo. Sem um Singleton, seria necessário passar a instância do jogo através de múltiplos construtores, gerando complexidade e possibilidade de inconsistências.
+
+**Como foi aplicado**
+
+A classe `Session` implementa o padrão Singleton com:
+- Construtor privado para evitar instâncias externas
+- Atributo estático `INSTANCE` que armazena a única instância
+- Método estático `getInstance()` para acesso global
+
+```java
+public class Session {
+    private static final Session INSTANCE = new Session();
+    
+    private Session() {}  // Construtor privado
+    
+    public static Session getInstance() {
+        return INSTANCE;
+    }
+}
+```
+
+**Onde está no código**
+
+| Arquivo               | Papel                                                  |
+| --------------------- | ------------------------------------------------------ |
+| `app/Session.java`    | Singleton que gerencia a instância única de `Jogo`     |
+
+**Benefício**
+
+Qualquer controlador ou componente pode acessar o jogo atual através de `Session.getInstance().getJogoAtual()` sem necessidade de injeção de dependência. A instância é garantida como única e global, simplificando o fluxo de dados da aplicação.
+
+---
+
 ### 1. Padrao Comportamental: Command
 
 * **Arquivo Principal:** `src/main/java/controller/game/command/AtacarCommand.java`
