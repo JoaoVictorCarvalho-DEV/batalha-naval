@@ -151,15 +151,51 @@ Qualquer controlador ou componente pode acessar o jogo atual através de `Sessio
 
 ---
 
-### 1. Padrao Comportamental: Command
+### Command — Encapsulamento de ataques e auditoria da partida
 
-* **Arquivo Principal:** `src/main/java/controller/game/command/AtacarCommand.java`
-* **Como e Utilizado:** Toda intencao de disparo no tabuleiro inimigo e encapsulada dentro de um objeto `AtacarCommand`. Em vez de o controlador da tela executar o ataque diretamente, ele cria uma instancia deste comando (passando as coordenadas e referencias do botao clicado) e dispara o metodo `.executar()`.
-* **Geracao do Relatorio Final:** Cada comando executado com sucesso e armazenado em uma pilha historica (`Stack<AcaoCommand>`) mantida no controlador central. No final da partida, o metodo `finalizarJogo()` invoca uma varredura sequencial nesta pilha. Como cada objeto `AtacarCommand` retem internamente as coordenadas do tiro e o enumerador do resultado obtido, o sistema reconstroi a cronologia exata turn-by-turn do combate, gerando o relatorio estatistico no terminal sem a necessidade de criar variaveis de log paralelas na camada de modelo.
+**Problema que resolve**
 
-### 2. Padrao Criacional: Factory Method
+O processamento direto de disparos e o gerenciamento das jogadas sobrecarregavam o controlador com múltiplas responsabilidades, dificultando o rastreamento histórico das ações e gerando acoplamento entre os gatilhos visuais e as regras de negócio.
 
-* **Arquivo Principal:** `src/main/java/model/embarcacoes/EmbarcacaoFactory.java`
-* **Como e Utilizado:** A fabrica elimina a necessidade do uso do operador `new` e de checagens dinamicas de tipo (`instanceof`) no controlador de interface, centralizando a criacao das subclasses de `Embarcacao` (como `Cruzador`, `Submarino`, etc.) atraves de um registro estatico de construtores.
-* **Instanciacao dos Navios dos Dois Jogadores:** * **Jogador 1:** Durante a fase de posicionamento, o laco de leitura percorre um catalogo de identificadores textuais (Strings) e invoca `EmbarcacaoFactory.criar(tipo)` para materializar as pecas que o usuario posicionara na tela.
-    * **Jogador 2 (Maquina):** Assim que o posicionamento do Jogador 1 e validado, o sistema aciona novamente a `EmbarcacaoFactory` passando o nome do navio recem-criado. Isso garante o nascimento de uma nova instancia inedita, isolada em memoria, para ser submetida ao algoritmo assimetrico de busca de coordenadas do oponente, mantendo a frota de ambos os jogadores homogenea na assinatura, mas heterogenea na disposicao geografica do tabuleiro.
+**Como foi aplicado**
+
+Toda intenção de disparo no tabuleiro inimigo é encapsulada dentro de um objeto `AtacarCommand`. Em vez de o controlador da tela executar o ataque diretamente, ele cria uma instância deste comando (passando as coordenadas e referências do botão clicado) e dispara o método `.executar()`.
+
+Cada comando executado com sucesso é armazenado em uma pilha histórica mantida no controlador central. No final da partida, o método `finalizarJogo()` invoca uma varredura sequencial nesta pilha. Como cada objeto `AtacarCommand` retém internamente as coordenadas do tiro e o enumerador do resultado obtido, o sistema reconstrói a cronologia exata turn-by-turn do combate através do método `gerarRelatorioCronologico()`.
+
+**Onde está no código**
+
+| Arquivo | Papel |
+| ------------------------------------------- | ------------------------------------------------------------- |
+| `controller/game/command/AcaoCommand.java`  | Interface base que define o contrato de execução de ações     |
+| `controller/game/command/AtacarCommand.java` | Implementação concreta que encapsula os dados do disparo       |
+| `controller/game/GameController.java`       | Instancia, executa e gerencia a pilha histórica de comandos   |
+
+**Benefício**
+
+Desacoplamento total entre o clique do mouse no JavaFX e o processamento de regras de combate. O histórico permite rastreabilidade via Event Sourcing parcial para gerar logs estatísticos detalhados sem a necessidade de poluir a camada de modelo com variáveis ou estruturas de texto paralelas.
+
+AtacarCommand comandoAtaque = new AtacarCommand(jogo, row, col, cell);
+comandoAtaque.executar();
+historicoComandos.push(comandoAtaque);
+
+---
+
+### Factory Method — Inicialização e descentralização de embarcações
+
+**Problema que resolve**
+
+A instanciação das frotas acoplava o controlador rigidamente com as subclasses concretas de `Embarcacao`. O espelhamento dos navios para a máquina exigia validações poluidoras em tempo de execução com o operador `instanceof` e o uso repetitivo do operador `new`.
+
+**Como foi aplicado**
+
+A criação das subclasses de navios foi centralizada e delegada para a classe `EmbarcacaoFactory`, que utiliza um catálogo estático indexado (`Map` de referências de construtores/`Supplier`).
+
+A fábrica atende o ciclo de vida de criação dos dois jogadores de forma dinâmica:
+- **Jogador 1:** Durante a fase de posicionamento, o laço de leitura percorre um catálogo de identificadores textuais (Strings) e invoca a fábrica para materializar as peças sequencialmente.
+- **Jogador 2 (Máquina):** Assim que o posicionamento humano é confirmado, o controlador aciona a fábrica passando o nome do navio recém-criado, gerando uma peça inédita e isolada em memória para alimentar o algoritmo de busca assimétrica da IA.
+
+```text
+EmbarcacaoFactory.criar("Cruzador") ──> Retorna nova instância isolada de Cruzador
+
+Arquivo Principal: src/main/java/model/embarcacoes/EmbarcacaoFactory.java
